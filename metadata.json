@@ -1,0 +1,6 @@
+{
+  "name": "Cuentos con Valores",
+  "description": "Cuentos infantiles ilustrados con valores y virtudes, audiocuentos, láminas para colorear descargables y recortables navideños del Belén.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
