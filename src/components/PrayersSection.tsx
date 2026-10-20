@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PRAYERS, Prayer } from '../data/prayers';
-import { Sparkles, Moon, Sun, Heart, Utensils, Volume2, VolumeX, Copy, Check, Printer } from 'lucide-react';
+import { Sparkles, Moon, Sun, Heart, Utensils, Volume2, VolumeX, Copy, Check, Download } from 'lucide-react';
 
 export const PrayersSection: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<'todas' | 'dormir' | 'manana' | 'gratitud' | 'familia'>('todas');
@@ -19,53 +19,26 @@ export const PrayersSection: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handlePrint = (prayer: Prayer) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>${prayer.title} - Oración Infantil</title>
-          <style>
-            body {
-              font-family: Georgia, serif;
-              padding: 40px;
-              max-width: 600px;
-              margin: 0 auto;
-              color: #1e293b;
-              line-height: 1.8;
-              text-align: center;
-              border: 8px double #f59e0b;
-              border-radius: 24px;
-            }
-            h1 { color: #b45309; font-size: 28px; margin-bottom: 8px; }
-            .subtitle { color: #64748b; font-style: italic; font-size: 15px; margin-bottom: 25px; }
-            .lines { font-size: 18px; margin: 30px 0; }
-            .line { margin: 8px 0; }
-            .reflection { margin-top: 30px; padding: 15px; background: #fef3c7; border-radius: 12px; font-size: 14px; font-style: italic; }
-            .footer { margin-top: 30px; font-size: 12px; color: #94a3b8; }
-          </style>
-        </head>
-        <body>
-          <div style="font-size: 32px;">${prayer.momentIcon}</div>
-          <h1>${prayer.title}</h1>
-          <div class="subtitle">${prayer.subtitle}</div>
-          <div class="lines">
-            ${prayer.lines.map((l) => `<div class="line">${l}</div>`).join('')}
-          </div>
-          <div class="reflection">
-            " ${prayer.reflection} "
-          </div>
-          <div class="footer">
-            Cuentos con Valores · Colección de Juancar Hidalgo
-          </div>
-          <script>
-            window.onload = function() { window.print(); }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+  const handleDownloadPrayer = (prayer: Prayer) => {
+    try {
+      const header = `🙏 ORACIÓN INFANTIL CON VALORES\n${prayer.title.toUpperCase()}\n« ${prayer.subtitle} »\n${'='.repeat(50)}\n\n`;
+      const verses = prayer.lines.map((l) => `  ${l}`).join('\n') + '\n\n';
+      const reflection = `💡 REFLEXIÓN:\n"${prayer.reflection}"\n\n`;
+      const footer = `${'='.repeat(50)}\nColección Cuentos con Valores de Juancar Hidalgo\nGuardado para leer en familia o imprimir a tu ritmo.\n`;
+
+      const fullText = header + verses + reflection + footer;
+      const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `oracion-${prayer.title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error al descargar oración:', err);
+    }
   };
 
   return (
@@ -239,12 +212,12 @@ export const PrayersSection: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => handlePrint(selectedPrayer)}
+                    onClick={() => handleDownloadPrayer(selectedPrayer)}
                     className="p-2.5 rounded-xl bg-white hover:bg-amber-50 border border-amber-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-                    title="Imprimir lámina para la mesilla"
+                    title="Descargar ficha de la oración para leer o imprimir a tu ritmo"
                   >
-                    <Printer className="w-4 h-4 text-slate-600" />
-                    <span className="hidden sm:inline">Imprimir lámina</span>
+                    <Download className="w-4 h-4 text-slate-600" />
+                    <span className="hidden sm:inline">Descargar ficha</span>
                   </button>
                 </div>
               </div>

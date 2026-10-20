@@ -7,6 +7,7 @@ interface HeroProps {
   onSelectCategory: (cat: ValueCategory) => void;
   categories: ValueCategory[];
   totalStories: number;
+  onOpenChatbot?: () => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({
@@ -14,6 +15,7 @@ export const Hero: React.FC<HeroProps> = ({
   onSelectCategory,
   categories,
   totalStories,
+  onOpenChatbot,
 }) => {
   return (
     <section className="relative overflow-hidden pt-8 pb-12 sm:pt-12 sm:pb-16 bg-gradient-to-b from-amber-100/60 via-amber-50/40 to-transparent">
@@ -65,6 +67,20 @@ export const Hero: React.FC<HeroProps> = ({
               Guía de Preguntas Familiares
             </span>
           </div>
+
+          {/* Chatbot CTA Button */}
+          {onOpenChatbot && (
+            <div className="mt-7 flex justify-center">
+              <button
+                type="button"
+                onClick={onOpenChatbot}
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-600 hover:to-amber-600 text-white font-bold text-sm sm:text-base shadow-lg shadow-amber-500/25 transition-all transform hover:scale-105 active:scale-95 cursor-pointer border-2 border-white/60"
+              >
+                <Sparkles className="w-5 h-5 text-amber-100 animate-pulse" />
+                <span>✨ Habla con Valerio: ¡Crea un cuento para tu hijo/a (IA)!</span>
+              </button>
+            </div>
+          )}
 
           {/* Category Filter Chips */}
           <div className="mt-8 pt-6 border-t border-amber-200/60">

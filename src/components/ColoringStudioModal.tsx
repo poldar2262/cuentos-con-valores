@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Printer, RotateCcw, Download, Sparkles, Paintbrush, Eraser, Check, Palette, Undo2 } from 'lucide-react';
+import { X, RotateCcw, Download, Sparkles, Paintbrush, Eraser, Check, Palette, Undo2 } from 'lucide-react';
 import { Story } from '../types';
 import { COLORING_DESIGNS } from '../data/coloringSvgData';
 
@@ -407,8 +407,23 @@ export const ColoringStudioModal: React.FC<ColoringStudioModalProps> = ({
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleDownloadCleanSheet = () => {
+    if (story?.coloringSheet?.lineartImage) {
+      const link = document.createElement('a');
+      link.href = story.coloringSheet.lineartImage;
+      link.download = `lamina-${story.id}-para-colorear.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (story?.coloringSheet?.pdfUrl) {
+      const link = document.createElement('a');
+      link.href = story.coloringSheet.pdfUrl;
+      link.target = '_blank';
+      link.download = `lamina-${story.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   if (!story) return null;
@@ -450,16 +465,16 @@ export const ColoringStudioModal: React.FC<ColoringStudioModalProps> = ({
               </button>
             )}
 
-            {/* Download/Print PDF button */}
+            {/* Download Clean Sheet button */}
             <button
-              id="btn-print-coloring-sheet"
+              id="btn-download-coloring-sheet"
               type="button"
-              onClick={handlePrint}
+              onClick={handleDownloadCleanSheet}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-              title="Descargar lámina limpia en PDF para imprimir en papel"
+              title="Descargar lámina limpia para guardar o imprimir a tu ritmo"
             >
-              <Printer className="w-4 h-4 text-sky-300" />
-              <span className="hidden sm:inline">Descargar Lámina (PDF)</span>
+              <Download className="w-4 h-4 text-sky-300" />
+              <span className="hidden sm:inline">Descargar Lámina</span>
             </button>
 
             {/* Close */}
@@ -777,7 +792,7 @@ export const ColoringStudioModal: React.FC<ColoringStudioModalProps> = ({
 
             {/* Hint message */}
             <p className="text-xs text-slate-500 mt-3 text-center">
-              🎨 <strong>¡Lámina lista para colorear!</strong> Selecciona tu color favorito y haz clic en las áreas para rellenarlas con el <strong>Relleno Mágico</strong>, usa el <strong>Pincel Libre</strong> para detalles, o pulsa <strong>&quot;Descargar Lámina (PDF)&quot;</strong> para imprimirla en papel.
+              🎨 <strong>¡Lámina lista para colorear!</strong> Selecciona tu color favorito y haz clic en las áreas para rellenarlas con el <strong>Relleno Mágico</strong>, usa el <strong>Pincel Libre</strong> para detalles, o pulsa <strong>&quot;Descargar Lámina&quot;</strong> para guardarla en tu dispositivo e imprimirla cuando quieras.
             </p>
           </div>
         </div>

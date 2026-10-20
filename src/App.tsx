@@ -11,6 +11,8 @@ import { ColoringStudioModal } from './components/ColoringStudioModal';
 import { ContactModal } from './components/ContactModal';
 import { ManualModal } from './components/ManualModal';
 import { AdminModal } from './components/AdminModal';
+import { StoryChatbotModal } from './components/StoryChatbotModal';
+import { StoryChatbotLauncher } from './components/StoryChatbotLauncher';
 import { Footer } from './components/Footer';
 import { STORIES } from './data/stories';
 import { Story, ValueCategory } from './types';
@@ -65,6 +67,7 @@ export default function App() {
   const [isContactOpen, setIsContactOpen] = useState<boolean>(false);
   const [isManualOpen, setIsManualOpen] = useState<boolean>(false);
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState<boolean>(false);
 
   const handleAddStory = (newStory: Story) => {
     const updated = [newStory, ...storiesList];
@@ -126,6 +129,7 @@ export default function App() {
         onOpenContact={() => setIsContactOpen(true)}
         onOpenManual={() => setIsManualOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
+        onOpenChatbot={() => setIsChatbotOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -136,6 +140,7 @@ export default function App() {
           onSelectCategory={setSelectedCategory}
           categories={ALL_CATEGORIES}
           totalStories={filteredStories.length}
+          onOpenChatbot={() => setIsChatbotOpen(true)}
         />
 
         {/* Stories Section Grid */}
@@ -241,6 +246,7 @@ export default function App() {
         onOpenContact={() => setIsContactOpen(true)}
         onOpenManual={() => setIsManualOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
+        onOpenChatbot={() => setIsChatbotOpen(true)}
       />
 
       {/* Interactive Story Reader Modal */}
@@ -273,6 +279,10 @@ export default function App() {
       <ManualModal
         isOpen={isManualOpen}
         onClose={() => setIsManualOpen(false)}
+        onOpenChatbot={() => {
+          setIsManualOpen(false);
+          setIsChatbotOpen(true);
+        }}
       />
 
       {/* Private Admin Panel Modal */}
@@ -283,6 +293,15 @@ export default function App() {
         onAddStory={handleAddStory}
         onUpdateStory={handleUpdateStory}
         onDeleteStory={handleDeleteStory}
+      />
+
+      {/* Floating Magic Launcher for AI Story Chatbot */}
+      <StoryChatbotLauncher onClick={() => setIsChatbotOpen(true)} />
+
+      {/* Interactive AI Story Chatbot Modal */}
+      <StoryChatbotModal
+        isOpen={isChatbotOpen}
+        onClose={() => setIsChatbotOpen(false)}
       />
     </div>
   );

@@ -7,6 +7,7 @@ interface HeaderProps {
   onOpenContact: () => void;
   onOpenManual: () => void;
   onOpenAdmin?: () => void;
+  onOpenChatbot?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -15,6 +16,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenContact,
   onOpenManual,
   onOpenAdmin,
+  onOpenChatbot,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -96,6 +98,17 @@ export const Header: React.FC<HeaderProps> = ({
               <HelpCircle className="w-4 h-4 text-indigo-600" />
               <span>Manual</span>
             </button>
+            {onOpenChatbot && (
+              <button
+                type="button"
+                onClick={onOpenChatbot}
+                className="px-3.5 py-2 rounded-xl text-amber-950 bg-gradient-to-r from-amber-300 via-amber-200 to-amber-300 hover:from-amber-400 hover:to-amber-400 border border-amber-400/80 transition-all flex items-center gap-1.5 cursor-pointer font-bold shadow-xs active:scale-95"
+                title="Hablar con Valerio: cuentos personalizados con valores"
+              >
+                <Sparkles className="w-4 h-4 text-amber-700 animate-pulse" />
+                <span>Habla con Valerio (IA)</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onOpenContact}
@@ -194,6 +207,19 @@ export const Header: React.FC<HeaderProps> = ({
             <HelpCircle className="w-4 h-4 text-indigo-600" />
             <span>📖 Manual de Uso de la Web</span>
           </button>
+          {onOpenChatbot && (
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenChatbot();
+              }}
+              className="w-full text-left px-3 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 text-amber-950 font-bold flex items-center gap-2 shadow-xs cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-amber-800 animate-pulse" />
+              <span>✨ Habla con Valerio (Cuentos IA)</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {

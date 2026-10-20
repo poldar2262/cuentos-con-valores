@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   Scissors,
-  Printer,
   Download,
   Eye,
   Sparkles,
@@ -27,10 +26,6 @@ export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () 
   const [drivePdfUrl] = useState<string>(() => {
     return localStorage.getItem('belen_drive_pdf_url') || '';
   });
-
-  const handlePrint = () => {
-    window.print();
-  };
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -129,15 +124,6 @@ export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () 
               {/* Action Buttons Bar */}
               <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handlePrint}
-                    className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-xs transition-all flex items-center gap-2 cursor-pointer"
-                    title="Imprimir directamente la lámina en tu impresora"
-                  >
-                    <Printer className="w-4 h-4" />
-                    <span>Imprimir en A4</span>
-                  </button>
 
                   <button
                     type="button"
@@ -307,16 +293,8 @@ export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={handlePrint}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Imprimir</span>
-                </button>
-                <button
-                  type="button"
                   onClick={handleDownload}
-                  className="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Descargar</span>

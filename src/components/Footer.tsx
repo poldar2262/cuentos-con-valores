@@ -5,9 +5,15 @@ interface FooterProps {
   onOpenContact: () => void;
   onOpenManual?: () => void;
   onOpenAdmin?: () => void;
+  onOpenChatbot?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenContact, onOpenManual, onOpenAdmin }) => {
+export const Footer: React.FC<FooterProps> = ({
+  onOpenContact,
+  onOpenManual,
+  onOpenAdmin,
+  onOpenChatbot,
+}) => {
   return (
     <footer className="bg-white border-t border-amber-200 mt-16 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -54,6 +60,18 @@ export const Footer: React.FC<FooterProps> = ({ onOpenContact, onOpenManual, onO
                   🕊️ Oraciones para Niños
                 </a>
               </li>
+              {onOpenChatbot && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={onOpenChatbot}
+                    className="text-amber-700 font-bold hover:text-amber-900 transition-colors cursor-pointer text-left flex items-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+                    <span>Cuentos Personalizados (IA)</span>
+                  </button>
+                </li>
+              )}
               <li>
                 <a href="#valores" className="hover:text-amber-600 transition-colors">
                   Guía de Valores y Virtudes

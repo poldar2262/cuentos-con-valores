@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Printer, Sparkles, HelpCircle, Heart, Volume2, Type, Download, ExternalLink } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, FileText, Sparkles, HelpCircle, Heart, Volume2, Type, Download, ExternalLink } from 'lucide-react';
 import { Story } from '../types';
 
 interface StoryReaderModalProps {
@@ -21,8 +21,28 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
   const totalPages = story.pages.length;
   const currentPage = story.pages[currentPageIndex];
 
-  const handlePrint = () => {
-    window.print();
+  const handleDownloadStory = () => {
+    try {
+      const header = `📖 CUENTOS CON VALORES\n${story.title.toUpperCase()}\n`;
+      const meta = `Valor: ${story.value} • Edad recomendada: ${story.ageRange}\nAutor: Juancar Hidalgo\n${'='.repeat(55)}\n\n`;
+      const pagesText = story.pages
+        .map((p, idx) => `--- PÁGINA ${idx + 1} ---\n\n${p.text}\n`)
+        .join('\n');
+      const footer = `\n${'='.repeat(55)}\n💡 REFLEXIÓN Y VALOR:\n"${story.morale}"\n\n© Cuentos con Valores de Juancar Hidalgo\nGuardado para leer en familia o imprimir a tu ritmo.\n`;
+
+      const fullContent = header + meta + pagesText + footer;
+      const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${story.id}-cuento-${story.value.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error al descargar cuento:', err);
+    }
   };
 
   const readPageAloud = () => {
@@ -128,16 +148,16 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
               </a>
             )}
 
-            {/* Print / Save PDF button */}
+            {/* Download Story Text button */}
             <button
-              id="btn-print-story"
+              id="btn-download-story"
               type="button"
-              onClick={handlePrint}
+              onClick={handleDownloadStory}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold transition-colors cursor-pointer"
-              title="Imprimir el cuento completo o guardar como PDF"
+              title="Descargar el cuento completo para leer sin conexión o imprimir a tu gusto"
             >
-              <Printer className="w-4 h-4 text-amber-300" />
-              <span className="hidden sm:inline">Imprimir / PDF</span>
+              <FileText className="w-4 h-4 text-amber-300" />
+              <span className="hidden sm:inline">Descargar Cuento</span>
             </button>
 
             {/* Close button */}
