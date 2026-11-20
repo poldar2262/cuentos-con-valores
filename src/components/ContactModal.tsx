@@ -10,6 +10,8 @@ import {
   Copy,
   Check,
 } from 'lucide-react';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ interface ContactModalProps {
 export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
   const [submitted, setSubmitted] = useState(false);
   const [emailDelivered, setEmailDelivered] = useState(false);
+  const [cloudSaved, setCloudSaved] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -50,10 +53,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
       const list = Array.isArray(existing) ? existing : [];
       list.unshift({
         id: `local-${Date.now()}`,
-        name: name.trim() || 'Anónimo',
-        email: email.trim(),
-        valueSuggestion,
-        message: message.trim(),
+        name: (name.trim() || 'Anónimo').slice(0, 120),
+        email: email.trim().slice(0, 160),
+        valueSuggestion: (valueSuggestion.trim() || 'General').slice(0, 80),
+        message: message.trim().slice(0, 3000),
         createdAt: new Date().toISOString(),
         read: false,
         emailSent: wasEmailSent,
@@ -99,16 +102,23 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
     setSending(true);
     setSendError(null);
 
+    const cleanName = (name.trim() || 'Anónimo').slice(0, 120);
+    const cleanEmail = email.trim().slice(0, 160);
+    const cleanValue = (valueSuggestion.trim() || 'General').slice(0, 80);
+    const cleanMessage = message.trim().slice(0, 3000);
+
     const customWeb3Key =
       typeof window !== 'undefined' ? localStorage.getItem('web3forms_key') || '' : '';
     const customFormspree =
       typeof window !== 'undefined' ? localStorage.getItem('formspree_endpoint') || '' : '';
 
     let deliveredByEmail = false;
+    let relayProvider = 'firestore';
     let savedOnServer = false;
+    let savedInFirestore = false;
 
+    // 1. Intentar reenvío por correo y registro en servidor si está disponible
     try {
-      // 1. Envío principal al servidor propio (/api/suggestions): guarda en buzón y reenvía por correo si está configurado
       const response = await fetch('/api/suggestions', {
         method: 'POST',
         headers: {
@@ -116,10 +126,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          name: name.trim() || 'Anónimo',
-          email: email.trim(),
-          valueSuggestion,
-          message: message.trim(),
+          name: cleanName,
+          email: cleanEmail,
+          valueSuggestion: cleanValue,
+          message: cleanMessage,
           web3formsKey: customWeb3Key || undefined,
         }),
       });
@@ -128,9 +138,12 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
         const result = await response.json();
         savedOnServer = Boolean(result?.saved || result?.success);
         deliveredByEmail = Boolean(result?.emailSent);
+        if (deliveredByEmail && typeof result?.provider === 'string') {
+          relayProvider = result.provider.slice(0, 40);
+        }
       }
     } catch {
-      // Si la web está en un hosting estático sin /api/suggestions, probamos envío directo cliente
+      // Hosting estático sin endpoint de servidor o sin conexión al API
     }
 
     // 2. Si el servidor no lo reenvió y hay clave/endpoint configurado en cliente, intentar envío directo
@@ -143,14 +156,17 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
             Accept: 'application/json',
           },
           body: JSON.stringify({
-            name: name.trim() || 'Anónimo',
-            email: email.trim() || 'sin-email@cuentosyvalores.es',
+            name: cleanName,
+            email: cleanEmail || 'sin-email@cuentosyvalores.es',
             _subject: emailSubject,
-            valor: valueSuggestion,
-            message: message.trim(),
+            valor: cleanValue,
+            message: cleanMessage,
           }),
         });
-        if (resp.ok) deliveredByEmail = true;
+        if (resp.ok) {
+          deliveredByEmail = true;
+          relayProvider = 'formspree';
+        }
       } catch {
         // Ignorar error de red
       }
@@ -167,24 +183,51 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
           body: JSON.stringify({
             access_key: customWeb3Key,
             subject: emailSubject,
-            from_name: name.trim() || 'Visitante Cuentos con Valores',
-            name: name.trim() || 'Anónimo',
-            email: email.trim() || 'sin-email@cuentosyvalores.es',
-            valor: valueSuggestion,
-            message: message.trim(),
+            from_name: cleanName,
+            name: cleanName,
+            email: cleanEmail || 'sin-email@cuentosyvalores.es',
+            valor: cleanValue,
+            message: cleanMessage,
           }),
         });
         const data = await resp.json().catch(() => null);
-        if (resp.ok && data?.success) deliveredByEmail = true;
+        if (resp.ok && data?.success) {
+          deliveredByEmail = true;
+          relayProvider = 'web3forms';
+        }
       } catch {
         // Ignorar error de red
       }
     }
 
-    if (!savedOnServer) {
+    // 3. Guardar de forma permanente en Firebase Firestore para que aparezca en el Panel de Administración desde cualquier dispositivo
+    const docId = `sug-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const suggestionPath = `suggestions/${docId}`;
+    try {
+      await setDoc(doc(db, 'suggestions', docId), {
+        name: cleanName,
+        email: cleanEmail,
+        valueSuggestion: cleanValue,
+        message: cleanMessage,
+        createdAt: serverTimestamp(),
+        read: false,
+        emailSent: deliveredByEmail,
+        provider: relayProvider.slice(0, 40),
+      });
+      savedInFirestore = true;
+    } catch (fsError) {
+      try {
+        handleFirestoreError(fsError, OperationType.CREATE, suggestionPath);
+      } catch (loggedErr) {
+        console.warn('No se pudo guardar en Firestore, usando respaldo local:', loggedErr);
+      }
+    }
+
+    if (!savedInFirestore && !savedOnServer) {
       saveLocalBackup(deliveredByEmail);
     }
 
+    setCloudSaved(savedInFirestore);
     setEmailDelivered(deliveredByEmail);
     setSubmitted(true);
     setSending(false);
@@ -193,6 +236,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
   const handleResetAndClose = () => {
     setSubmitted(false);
     setEmailDelivered(false);
+    setCloudSaved(false);
     setSendError(null);
     setCopied(false);
     setName('');
@@ -229,12 +273,14 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
             {emailDelivered ? (
               <p className="text-sm text-slate-600 mt-2">
                 Tu sugerencia sobre <strong>{valueSuggestion}</strong> se ha enviado correctamente a{' '}
-                <strong>{recipientEmail}</strong> y ha quedado registrada en el buzón de la web.
+                <strong>{recipientEmail}</strong> y ha quedado guardada en el buzón{' '}
+                {cloudSaved ? 'de la nube' : 'de la web'}.
               </p>
             ) : (
               <p className="text-sm text-slate-600 mt-2">
                 Tu sugerencia sobre <strong>{valueSuggestion}</strong> ha quedado guardada en el{' '}
-                <strong>Buzón de Cuentos con Valores</strong> para que el autor la revise.
+                <strong>{cloudSaved ? 'Buzón en la nube' : 'Buzón'} de Cuentos con Valores</strong>{' '}
+                para que el administrador la revise.
               </p>
             )}
 

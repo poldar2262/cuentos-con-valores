@@ -22,8 +22,29 @@ import {
   Key,
   Inbox,
   Mail,
-  RefreshCw
+  RefreshCw,
+  Cloud
 } from 'lucide-react';
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import {
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+  Timestamp,
+  updateDoc,
+} from 'firebase/firestore';
+import {
+  ADMIN_EMAIL,
+  auth,
+  db,
+  handleFirestoreError,
+  OperationType,
+  signInAdminWithGoogle,
+  signOutAdmin,
+} from '../firebase';
 import { Story, ValueCategory } from '../types';
 
 interface SuggestionItem {
@@ -84,8 +105,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
   const [activeTab, setActiveTab] = useState<'nuevo' | 'gestionar' | 'buzon' | 'drive' | 'seguridad'>('nuevo');
 
-  // Buzón de sugerencias state
-  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
+  // Buzón de sugerencias state (Firebase Firestore + fallback servidor/local)
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [cloudAuthError, setCloudAuthError] = useState<string | null>(null);
+  const [cloudSuggestions, setCloudSuggestions] = useState<SuggestionItem[]>([]);
+  const [fallbackSuggestions, setFallbackSuggestions] = useState<SuggestionItem[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [emailConfigured, setEmailConfigured] = useState(false);
   const [mailProvider, setMailProvider] = useState<string>('inbox-only');
@@ -99,7 +125,22 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   });
   const [relaySavedMsg, setRelaySavedMsg] = useState(false);
 
-  const loadSuggestions = async () => {
+  const isCloudAdmin = Boolean(
+    firebaseUser &&
+      firebaseUser.emailVerified &&
+      firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+      setAuthReady(true);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const loadFallbackSuggestions = async () => {
     setLoadingSuggestions(true);
     let serverList: SuggestionItem[] = [];
     try {
@@ -129,18 +170,117 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     const seen = new Set(serverList.map((s) => s.id));
     const merged = [...serverList, ...localList.filter((s) => !seen.has(s.id))];
     merged.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-    setSuggestions(merged);
+    setFallbackSuggestions(merged);
     setLoadingSuggestions(false);
   };
 
   useEffect(() => {
-    if (isOpen && isAuthenticated) {
-      loadSuggestions();
-    }
+    if (!isOpen || !isAuthenticated) return;
+    void loadFallbackSuggestions();
   }, [isOpen, isAuthenticated]);
 
+  useEffect(() => {
+    if (!isOpen || !isAuthenticated || !authReady || !isCloudAdmin) {
+      setCloudSuggestions([]);
+      return;
+    }
+
+    setLoadingSuggestions(true);
+    const q = query(collection(db, 'suggestions'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const items: SuggestionItem[] = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data();
+          const ts = data.createdAt;
+          const createdAt =
+            ts instanceof Timestamp
+              ? ts.toDate().toISOString()
+              : typeof ts === 'string'
+                ? ts
+                : new Date().toISOString();
+          return {
+            id: docSnap.id,
+            name: String(data.name || 'Anónimo'),
+            email: String(data.email || ''),
+            valueSuggestion: String(data.valueSuggestion || 'General'),
+            message: String(data.message || ''),
+            createdAt,
+            read: Boolean(data.read),
+            emailSent: Boolean(data.emailSent),
+            provider: String(data.provider || 'firestore'),
+          };
+        });
+        setCloudSuggestions(items);
+        setLoadingSuggestions(false);
+        setCloudAuthError(null);
+      },
+      (error) => {
+        setLoadingSuggestions(false);
+        setCloudAuthError('No se pudo sincronizar el buzón en la nube con esta sesión.');
+        try {
+          handleFirestoreError(error, OperationType.LIST, 'suggestions');
+        } catch {
+          // Error already logged in structured JSON format by handleFirestoreError
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, [isOpen, isAuthenticated, authReady, isCloudAdmin]);
+
+  const suggestions = React.useMemo(() => {
+    const seen = new Set(cloudSuggestions.map((s) => s.id));
+    const combined = [...cloudSuggestions, ...fallbackSuggestions.filter((s) => !seen.has(s.id))];
+    combined.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    return combined;
+  }, [cloudSuggestions, fallbackSuggestions]);
+
+  const handleGoogleConnect = async () => {
+    setAuthBusy(true);
+    setCloudAuthError(null);
+    try {
+      const cred = await signInAdminWithGoogle();
+      if (cred.user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+        setCloudAuthError(
+          `Has iniciado sesión con ${cred.user.email || 'otra cuenta'}. Conecta con ${ADMIN_EMAIL} para leer el buzón.`
+        );
+      }
+    } catch (err) {
+      setCloudAuthError(
+        err instanceof Error
+          ? `No se pudo abrir el inicio de sesión de Google: ${err.message}`
+          : 'No se pudo completar el inicio de sesión con Google.'
+      );
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const handleGoogleDisconnect = async () => {
+    try {
+      await signOutAdmin();
+      setCloudSuggestions([]);
+    } catch {
+      // Ignore
+    }
+  };
+
   const handleMarkSuggestionRead = async (id: string, read: boolean) => {
-    setSuggestions((prev) => prev.map((s) => (s.id === id ? { ...s, read } : s)));
+    const inCloud = cloudSuggestions.some((s) => s.id === id);
+    if (inCloud && isCloudAdmin) {
+      try {
+        await updateDoc(doc(db, 'suggestions', id), { read });
+      } catch (error) {
+        try {
+          handleFirestoreError(error, OperationType.UPDATE, `suggestions/${id}`);
+        } catch {
+          // Structured error logged
+        }
+      }
+    }
+
+    setFallbackSuggestions((prev) => prev.map((s) => (s.id === id ? { ...s, read } : s)));
     try {
       if (typeof window !== 'undefined') {
         const raw = JSON.parse(localStorage.getItem('cuentos_suggestions_inbox') || '[]');
@@ -166,7 +306,20 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   };
 
   const handleDeleteSuggestion = async (id: string) => {
-    setSuggestions((prev) => prev.filter((s) => s.id !== id));
+    const inCloud = cloudSuggestions.some((s) => s.id === id);
+    if (inCloud && isCloudAdmin) {
+      try {
+        await deleteDoc(doc(db, 'suggestions', id));
+      } catch (error) {
+        try {
+          handleFirestoreError(error, OperationType.DELETE, `suggestions/${id}`);
+        } catch {
+          // Structured error logged
+        }
+      }
+    }
+
+    setFallbackSuggestions((prev) => prev.filter((s) => s.id !== id));
     try {
       if (typeof window !== 'undefined') {
         const raw = JSON.parse(localStorage.getItem('cuentos_suggestions_inbox') || '[]');
@@ -649,7 +802,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 type="button"
                 onClick={() => {
                   setActiveTab('buzon');
-                  loadSuggestions();
+                  void loadFallbackSuggestions();
                 }}
                 className={`py-3 px-4 border-b-2 transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'buzon'
@@ -1057,6 +1210,57 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               {/* TAB 2B: BUZÓN DE SUGERENCIAS */}
               {activeTab === 'buzon' && (
                 <div className="space-y-5">
+                  {/* Estado de conexión permanente con Firebase Firestore */}
+                  <div
+                    className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                      isCloudAdmin
+                        ? 'bg-emerald-50/80 border-emerald-300'
+                        : 'bg-sky-50 border-sky-300'
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 font-display font-bold text-sm text-slate-900">
+                        <Cloud
+                          className={`w-4 h-4 ${
+                            isCloudAdmin ? 'text-emerald-600' : 'text-sky-600'
+                          }`}
+                        />
+                        <span>
+                          {isCloudAdmin
+                            ? `Buzón conectado en la nube (${firebaseUser?.email})`
+                            : 'Conecta tu cuenta Google para ver todos los mensajes en la nube'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600">
+                        {isCloudAdmin
+                          ? 'Todos los mensajes enviados desde cualquier móvil u ordenador se guardan en Firebase Firestore y aparecen aquí al instante.'
+                          : `Inicia sesión con ${ADMIN_EMAIL} para sincronizar de forma permanente las sugerencias enviadas desde cualquier dispositivo.`}
+                      </p>
+                      {cloudAuthError && (
+                        <p className="text-xs text-rose-700 font-semibold pt-1">{cloudAuthError}</p>
+                      )}
+                    </div>
+
+                    {isCloudAdmin ? (
+                      <button
+                        type="button"
+                        onClick={handleGoogleDisconnect}
+                        className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-emerald-300 text-emerald-900 font-bold text-xs shrink-0 cursor-pointer"
+                      >
+                        Cambiar cuenta
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={authBusy}
+                        onClick={handleGoogleConnect}
+                        className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white font-bold text-xs shrink-0 shadow-xs cursor-pointer"
+                      >
+                        {authBusy ? 'Conectando...' : 'Conectar con Google'}
+                      </button>
+                    )}
+                  </div>
+
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-amber-50/80 border border-amber-200">
                     <div>
                       <h4 className="font-display font-bold text-slate-900 text-base">
@@ -1071,7 +1275,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     </div>
                     <button
                       type="button"
-                      onClick={loadSuggestions}
+                      onClick={loadFallbackSuggestions}
                       className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-amber-300 text-slate-700 font-bold text-xs flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${loadingSuggestions ? 'animate-spin' : ''}`} />
