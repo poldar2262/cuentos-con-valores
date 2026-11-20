@@ -1330,14 +1330,24 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
                           <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
                             {item.email && item.email.includes('@') && (
-                              <a
-                                href={`mailto:${item.email}?subject=${encodeURIComponent(`Re: Tu sugerencia en Cuentos con Valores (${item.valueSuggestion})`)}`}
-                                target="_top"
-                                className="px-3 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 font-bold text-xs flex items-center gap-1"
-                              >
-                                <Mail className="w-3.5 h-3.5" />
-                                <span>Responder</span>
-                              </a>
+                              <>
+                                <a
+                                  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(item.email)}&su=${encodeURIComponent(`Re: Tu sugerencia en Cuentos con Valores (${item.valueSuggestion})`)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-3 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs flex items-center gap-1"
+                                >
+                                  <Mail className="w-3.5 h-3.5" />
+                                  <span>Responder (Gmail)</span>
+                                </a>
+                                <a
+                                  href={`mailto:${item.email}?subject=${encodeURIComponent(`Re: Tu sugerencia en Cuentos con Valores (${item.valueSuggestion})`)}`}
+                                  className="px-3 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 font-bold text-xs flex items-center gap-1"
+                                >
+                                  <Mail className="w-3.5 h-3.5" />
+                                  <span>App Correo</span>
+                                </a>
+                              </>
                             )}
                             <button
                               type="button"

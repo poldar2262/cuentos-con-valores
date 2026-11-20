@@ -24,6 +24,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
   const [cloudSaved, setCloudSaved] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [mailHint, setMailHint] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -45,6 +46,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
 
   const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
   const gmailWebLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipientEmail}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+  const outlookWebLink = `https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(recipientEmail)}&subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
 
   const saveLocalBackup = (wasEmailSent: boolean) => {
     try {
@@ -238,6 +240,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
     setEmailDelivered(false);
     setCloudSaved(false);
     setSendError(null);
+    setMailHint(null);
     setCopied(false);
     setName('');
     setEmail('');
@@ -290,26 +293,45 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                   ? '📬 ¿Quieres enviarte o mandar una copia desde tu propio correo?'
                   : `📬 ¿Quieres enviarla también ahora mismo a ${recipientEmail} desde tu correo?`}
               </p>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <a
-                  href={mailtoLink}
-                  target="_top"
-                  className="flex-1 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs text-center flex items-center justify-center gap-1.5 shadow-xs transition-colors"
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>App de Correo / Gmail</span>
-                </a>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <a
                   href={gmailWebLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 py-2.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs text-center flex items-center justify-center gap-1.5 shadow-xs transition-colors"
+                  className="py-2.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs text-center flex items-center justify-center gap-1.5 shadow-xs transition-colors"
                 >
                   <Mail className="w-3.5 h-3.5" />
                   <span>Gmail Web</span>
                   <ExternalLink className="w-3 h-3 opacity-70" />
                 </a>
+                <a
+                  href={outlookWebLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs text-center flex items-center justify-center gap-1.5 shadow-xs transition-colors"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Outlook Web</span>
+                  <ExternalLink className="w-3 h-3 opacity-70" />
+                </a>
+                <a
+                  href={mailtoLink}
+                  onClick={() => {
+                    setMailHint(
+                      'Si en tu ordenador no tienes configurada una app de correo por defecto, usa Gmail Web, Outlook Web o Copiar.'
+                    );
+                  }}
+                  className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs text-center flex items-center justify-center gap-1.5 shadow-xs transition-colors"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>App Correo</span>
+                </a>
               </div>
+              {mailHint && (
+                <p className="text-[11px] text-amber-800 bg-white/80 rounded-lg px-2.5 py-1.5 border border-amber-200">
+                  {mailHint}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={handleCopyMessage}
@@ -446,21 +468,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                   <div className="grow border-t border-slate-200"></div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  <a
-                    href={message.trim() ? mailtoLink : '#'}
-                    target={message.trim() ? '_top' : undefined}
-                    onClick={(e) => {
-                      if (!message.trim()) {
-                        e.preventDefault();
-                        setSendError('Escribe primero tu idea o mensaje arriba antes de abrir tu app de correo.');
-                      }
-                    }}
-                    className="py-2 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs text-center flex items-center justify-center gap-1 transition-colors"
-                  >
-                    <Mail className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                    <span className="truncate">App Correo</span>
-                  </a>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <a
                     href={message.trim() ? gmailWebLink : '#'}
                     onClick={(e) => {
@@ -471,10 +479,42 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                     }}
                     target={message.trim() ? '_blank' : undefined}
                     rel="noopener noreferrer"
-                    className="py-2 px-2 rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-700 font-semibold text-xs text-center flex items-center justify-center gap-1 transition-colors"
+                    className="py-2 px-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 font-semibold text-xs text-center flex items-center justify-center gap-1 transition-colors"
                   >
                     <Mail className="w-3.5 h-3.5 text-red-500 shrink-0" />
                     <span className="truncate">Gmail Web</span>
+                  </a>
+                  <a
+                    href={message.trim() ? outlookWebLink : '#'}
+                    onClick={(e) => {
+                      if (!message.trim()) {
+                        e.preventDefault();
+                        setSendError('Escribe primero tu idea o mensaje arriba antes de abrir Outlook.');
+                      }
+                    }}
+                    target={message.trim() ? '_blank' : undefined}
+                    rel="noopener noreferrer"
+                    className="py-2 px-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-semibold text-xs text-center flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <Mail className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                    <span className="truncate">Outlook Web</span>
+                  </a>
+                  <a
+                    href={message.trim() ? mailtoLink : '#'}
+                    onClick={(e) => {
+                      if (!message.trim()) {
+                        e.preventDefault();
+                        setSendError('Escribe primero tu idea o mensaje arriba antes de abrir tu app de correo.');
+                      } else {
+                        setMailHint(
+                          'Si en tu ordenador no se abre ninguna app de correo, usa Gmail Web, Outlook Web o Copiar.'
+                        );
+                      }
+                    }}
+                    className="py-2 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs text-center flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <Mail className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                    <span className="truncate">App Correo</span>
                   </a>
                   <button
                     type="button"
@@ -494,6 +534,11 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                     )}
                   </button>
                 </div>
+                {mailHint && (
+                  <p className="text-[11px] text-amber-800 bg-amber-50 rounded-xl px-3 py-1.5 border border-amber-200">
+                    {mailHint}
+                  </p>
+                )}
               </div>
             </form>
           </div>
