@@ -1,0 +1,71 @@
+{
+  "entities": {
+    "Suggestion": {
+      "title": "Suggestion",
+      "description": "Sugerencia de cuento o mensaje enviado por familias o escuelas desde el buzón de la web.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Nombre del visitante o escuela.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "description": "Correo electrónico opcional de contacto.",
+          "maxLength": 160
+        },
+        "valueSuggestion": {
+          "type": "string",
+          "description": "Valor o temática infantil sugerida.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "message": {
+          "type": "string",
+          "description": "Contenido del mensaje o idea del cuento.",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Fecha de creación asignada por el servidor."
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Indica si el administrador ya leyó el mensaje."
+        },
+        "emailSent": {
+          "type": "boolean",
+          "description": "Indica si también se reenvió copia por correo electrónico."
+        },
+        "provider": {
+          "type": "string",
+          "description": "Canal utilizado al registrar el mensaje.",
+          "minLength": 1,
+          "maxLength": 40
+        }
+      },
+      "required": [
+        "name",
+        "email",
+        "valueSuggestion",
+        "message",
+        "createdAt",
+        "read",
+        "emailSent",
+        "provider"
+      ]
+    }
+  },
+  "firestore": {
+    "/suggestions/{suggestionId}": {
+      "schema": {
+        "$ref": "#/entities/Suggestion"
+      },
+      "description": "Colección de sugerencias enviadas desde la web; creación pública validada y lectura/gestión exclusiva del administrador."
+    }
+  }
+}

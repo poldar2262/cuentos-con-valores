@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email_verified == true &&
+        request.auth.token.email == 'jchurizar@gmail.com';
+    }
+
+    function isValidSuggestion(data) {
+      return data.keys().hasAll([
+          'name',
+          'email',
+          'valueSuggestion',
+          'message',
+          'createdAt',
+          'read',
+          'emailSent',
+          'provider'
+        ]) &&
+        data.keys().hasOnly([
+          'name',
+          'email',
+          'valueSuggestion',
+          'message',
+          'createdAt',
+          'read',
+          'emailSent',
+          'provider'
+        ]) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.email is string && data.email.size() <= 160 &&
+        data.valueSuggestion is string && data.valueSuggestion.size() >= 1 && data.valueSuggestion.size() <= 80 &&
+        data.message is string && data.message.size() >= 1 && data.message.size() <= 3000 &&
+        data.createdAt is timestamp &&
+        data.read is bool &&
+        data.emailSent is bool &&
+        data.provider is string && data.provider.size() >= 1 && data.provider.size() <= 40;
+    }
+
+    match /suggestions/{suggestionId} {
+      allow get: if isAdmin() && isValidId(suggestionId);
+      allow list: if isAdmin() && resource.data.name is string;
+      allow create: if isValidId(suggestionId) &&
+        isValidSuggestion(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().read == false;
+      allow update: if isAdmin() &&
+        isValidId(suggestionId) &&
+        isValidSuggestion(incoming()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['read']) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().name == existing().name &&
+        incoming().email == existing().email &&
+        incoming().valueSuggestion == existing().valueSuggestion &&
+        incoming().message == existing().message &&
+        incoming().emailSent == existing().emailSent &&
+        incoming().provider == existing().provider;
+      allow delete: if isAdmin() && isValidId(suggestionId);
+    }
+  }
+}
