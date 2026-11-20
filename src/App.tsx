@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { StoryCard } from './components/StoryCard';
@@ -6,17 +6,31 @@ import { DownloadsSection } from './components/DownloadsSection';
 import { BelenRecortableSection } from './components/BelenRecortableSection';
 import { ValuesGuideSection } from './components/ValuesGuideSection';
 import { PrayersSection } from './components/PrayersSection';
-import { StoryReaderModal } from './components/StoryReaderModal';
-import { ColoringStudioModal } from './components/ColoringStudioModal';
-import { ContactModal } from './components/ContactModal';
-import { ManualModal } from './components/ManualModal';
-import { AdminModal } from './components/AdminModal';
-import { StoryChatbotModal } from './components/StoryChatbotModal';
+import { FaqSection } from './components/FaqSection';
 import { StoryChatbotLauncher } from './components/StoryChatbotLauncher';
 import { Footer } from './components/Footer';
 import { STORIES } from './data/stories';
 import { Story, ValueCategory } from './types';
-import { BookOpen, Sparkles, Filter, Smile } from 'lucide-react';
+import { BookOpen, Smile } from 'lucide-react';
+
+const StoryReaderModal = lazy(() =>
+  import('./components/StoryReaderModal').then((m) => ({ default: m.StoryReaderModal }))
+);
+const ColoringStudioModal = lazy(() =>
+  import('./components/ColoringStudioModal').then((m) => ({ default: m.ColoringStudioModal }))
+);
+const ContactModal = lazy(() =>
+  import('./components/ContactModal').then((m) => ({ default: m.ContactModal }))
+);
+const ManualModal = lazy(() =>
+  import('./components/ManualModal').then((m) => ({ default: m.ManualModal }))
+);
+const AdminModal = lazy(() =>
+  import('./components/AdminModal').then((m) => ({ default: m.AdminModal }))
+);
+const StoryChatbotModal = lazy(() =>
+  import('./components/StoryChatbotModal').then((m) => ({ default: m.StoryChatbotModal }))
+);
 
 const ALL_CATEGORIES: ValueCategory[] = [
   'Todos',
@@ -33,33 +47,37 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<ValueCategory>('Todos');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Stories list state with local storage persistence for admin additions
-  const [storiesList, setStoriesList] = useState<Story[]>(() => {
+  // Stories list state (initializes cleanly with STORIES for SSR/hydration, then syncs localStorage)
+  const [storiesList, setStoriesList] = useState<Story[]>(STORIES);
+
+  useEffect(() => {
     try {
       const saved = localStorage.getItem('cuentos_custom_list');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Clean out placeholder demo links from earlier testing versions if present
           const cleaned = parsed.map((item: Story) => {
-            let updated = { ...item };
+            const updated = { ...item };
             if (updated.pdfUrl && updated.pdfUrl.includes('_demo/view')) {
               updated.pdfUrl = '';
             }
             if (updated.coloringPdfUrl && updated.coloringPdfUrl.includes('_demo/view')) {
               updated.coloringPdfUrl = '';
             }
+            if (!updated.audioUrl || updated.audioUrl.includes('freesound.org')) {
+              const baseStory = STORIES.find((s) => s.id === updated.id);
+              updated.audioUrl = baseStory?.audioUrl || '/audio/cajita-estrellas.wav';
+            }
             return updated;
           });
           localStorage.setItem('cuentos_custom_list', JSON.stringify(cleaned));
-          return cleaned;
+          setStoriesList(cleaned);
         }
       }
     } catch (e) {
       console.error(e);
     }
-    return STORIES;
-  });
+  }, []);
 
   // Modals state
   const [readingStory, setReadingStory] = useState<Story | null>(null);
@@ -68,6 +86,12 @@ export default function App() {
   const [isManualOpen, setIsManualOpen] = useState<boolean>(false);
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState<boolean>(false);
+  const [hasOpenedChatbot, setHasOpenedChatbot] = useState<boolean>(false);
+
+  const openChatbot = () => {
+    setHasOpenedChatbot(true);
+    setIsChatbotOpen(true);
+  };
 
   const handleAddStory = (newStory: Story) => {
     const updated = [newStory, ...storiesList];
@@ -129,7 +153,7 @@ export default function App() {
         onOpenContact={() => setIsContactOpen(true)}
         onOpenManual={() => setIsManualOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
-        onOpenChatbot={() => setIsChatbotOpen(true)}
+        onOpenChatbot={openChatbot}
       />
 
       {/* Main Content Area */}
@@ -140,7 +164,7 @@ export default function App() {
           onSelectCategory={setSelectedCategory}
           categories={ALL_CATEGORIES}
           totalStories={filteredStories.length}
-          onOpenChatbot={() => setIsChatbotOpen(true)}
+          onOpenChatbot={openChatbot}
         />
 
         {/* Stories Section Grid */}
@@ -153,7 +177,7 @@ export default function App() {
                 </span>
                 <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
                   {selectedCategory === 'Todos'
-                    ? 'Colección de Cuentos Infantiles'
+                    ? 'Explora nuestros cuentos según el valor que quieras enseñar'
                     : `Cuentos de ${selectedCategory}`}
                 </h2>
               </div>
@@ -239,6 +263,9 @@ export default function App() {
 
         {/* Guide of values and virtues for parents and teachers */}
         <ValuesGuideSection />
+
+        {/* Visible FAQ Section for families and schools */}
+        <FaqSection />
       </main>
 
       {/* Footer */}
@@ -246,63 +273,83 @@ export default function App() {
         onOpenContact={() => setIsContactOpen(true)}
         onOpenManual={() => setIsManualOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
-        onOpenChatbot={() => setIsChatbotOpen(true)}
+        onOpenChatbot={openChatbot}
       />
 
       {/* Interactive Story Reader Modal */}
       {readingStory && (
-        <StoryReaderModal
-          story={readingStory}
-          onClose={() => setReadingStory(null)}
-          onOpenColoring={(s) => {
-            setReadingStory(null);
-            setColoringStory(s);
-          }}
-        />
+        <Suspense fallback={null}>
+          <StoryReaderModal
+            story={readingStory}
+            onClose={() => setReadingStory(null)}
+            onOpenColoring={(s) => {
+              setReadingStory(null);
+              setColoringStory(s);
+            }}
+          />
+        </Suspense>
       )}
 
-      {/* Interactive Coloring Studio & Printable PDF Modal */}
+      {/* Interactive Coloring Studio Modal */}
       {coloringStory && (
-        <ColoringStudioModal
-          story={coloringStory}
-          onClose={() => setColoringStory(null)}
-        />
+        <Suspense fallback={null}>
+          <ColoringStudioModal
+            story={coloringStory}
+            onClose={() => setColoringStory(null)}
+          />
+        </Suspense>
       )}
 
       {/* Contact / Suggestion Modal */}
-      <ContactModal
-        isOpen={isContactOpen}
-        onClose={() => setIsContactOpen(false)}
-      />
+      {isContactOpen && (
+        <Suspense fallback={null}>
+          <ContactModal
+            isOpen={isContactOpen}
+            onClose={() => setIsContactOpen(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Complete User Manual Modal */}
-      <ManualModal
-        isOpen={isManualOpen}
-        onClose={() => setIsManualOpen(false)}
-        onOpenChatbot={() => {
-          setIsManualOpen(false);
-          setIsChatbotOpen(true);
-        }}
-      />
+      {isManualOpen && (
+        <Suspense fallback={null}>
+          <ManualModal
+            isOpen={isManualOpen}
+            onClose={() => setIsManualOpen(false)}
+            onOpenChatbot={() => {
+              setIsManualOpen(false);
+              openChatbot();
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Private Admin Panel Modal */}
-      <AdminModal
-        isOpen={isAdminOpen}
-        onClose={() => setIsAdminOpen(false)}
-        stories={storiesList}
-        onAddStory={handleAddStory}
-        onUpdateStory={handleUpdateStory}
-        onDeleteStory={handleDeleteStory}
-      />
+      {isAdminOpen && (
+        <Suspense fallback={null}>
+          <AdminModal
+            isOpen={isAdminOpen}
+            onClose={() => setIsAdminOpen(false)}
+            stories={storiesList}
+            onAddStory={handleAddStory}
+            onUpdateStory={handleUpdateStory}
+            onDeleteStory={handleDeleteStory}
+          />
+        </Suspense>
+      )}
 
       {/* Floating Magic Launcher for AI Story Chatbot */}
-      <StoryChatbotLauncher onClick={() => setIsChatbotOpen(true)} />
+      <StoryChatbotLauncher onClick={openChatbot} />
 
-      {/* Interactive AI Story Chatbot Modal */}
-      <StoryChatbotModal
-        isOpen={isChatbotOpen}
-        onClose={() => setIsChatbotOpen(false)}
-      />
+      {/* Interactive AI Story Chatbot Modal (lazy-loaded on first open, then preserved) */}
+      {hasOpenedChatbot && (
+        <Suspense fallback={null}>
+          <StoryChatbotModal
+            isOpen={isChatbotOpen}
+            onClose={() => setIsChatbotOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

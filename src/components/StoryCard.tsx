@@ -27,7 +27,9 @@ export const StoryCard: React.FC<StoryCardProps> = ({
         <div className="relative aspect-4/3 w-full overflow-hidden bg-amber-50">
           <img
             src={story.coverImage}
-            alt={`Ilustración del cuento ${story.title}`}
+            alt={`Ilustración infantil del cuento ${story.title} sobre ${story.value}`}
+            width={848}
+            height={1264}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />

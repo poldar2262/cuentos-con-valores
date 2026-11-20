@@ -23,6 +23,8 @@ import {
   AlertCircle,
   RotateCcw
 } from 'lucide-react';
+import { speakInChunks, stopSpeech } from '../utils/speech';
+import { generateValerioLocalReply } from '../utils/valerioLocalEngine';
 
 interface StoryChatbotModalProps {
   isOpen: boolean;
@@ -97,6 +99,7 @@ export const StoryChatbotModal: React.FC<StoryChatbotModalProps> = ({ isOpen, on
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [savedStories, setSavedStories] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
     try {
       const saved = localStorage.getItem('cuentos_ia_guardados');
       return saved ? JSON.parse(saved) : [];
@@ -128,40 +131,28 @@ export const StoryChatbotModal: React.FC<StoryChatbotModalProps> = ({ isOpen, on
 
   if (!isOpen) return null;
 
-  // Audio Speech Reader function
+  // Audio Speech Reader function (chunked so long AI stories never cut off)
   const toggleSpeech = (text: string) => {
-    if (!synthRef.current) return;
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
     if (isSpeaking) {
-      synthRef.current.cancel();
+      stopSpeech();
       setIsSpeaking(false);
       return;
     }
 
-    // Clean markdown characters for pleasant speech
     const cleanText = text
       .replace(/[#*_~`]/g, '')
       .replace(/🌟|👦|🎯|🎂|📖|💡|🎨|✨/g, '')
       .trim();
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = 'es-ES';
-    utterance.rate = 0.95; // Slightly slower, relaxing pace for storytelling
-    utterance.pitch = 1.05; // Friendly, warm tone
-
-    // Try finding a Spanish voice
-    const voices = synthRef.current.getVoices();
-    const esVoice = voices.find((v) => v.lang.startsWith('es') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Mónica') || v.name.includes('Jorge')));
-    if (esVoice) {
-      utterance.voice = esVoice;
-    }
-
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    synthRef.current.cancel();
-    synthRef.current.speak(utterance);
     setIsSpeaking(true);
+    speakInChunks(cleanText, {
+      rate: 0.95,
+      pitch: 1.05,
+      onEnd: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false),
+    });
   };
 
   // Copy text to clipboard
@@ -237,7 +228,7 @@ export const StoryChatbotModal: React.FC<StoryChatbotModalProps> = ({ isOpen, on
     }, 150);
   };
 
-  // Call the backend API for story generation
+  // Call the backend API for story generation, with seamless local fallback for static hosting or network issues
   const requestStory = async (payload: {
     messages?: { role: string; content: string }[];
     childName?: string;
@@ -248,6 +239,9 @@ export const StoryChatbotModal: React.FC<StoryChatbotModalProps> = ({ isOpen, on
   }) => {
     setIsLoading(true);
     setErrorMessage(null);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 14000);
 
     try {
       const endpoint = payload.childName ? '/api/story' : '/api/chat';
@@ -263,15 +257,17 @@ export const StoryChatbotModal: React.FC<StoryChatbotModalProps> = ({ isOpen, on
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
+        signal: controller.signal,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al conectar con el servidor.');
+      const contentType = response.headers.get('content-type') || '';
+      if (!response.ok || !contentType.includes('application/json')) {
+        throw new Error(`Backend unavailable (${response.status})`);
       }
 
-      const botReply = data.reply || '¡Aquí tienes tu cuento con valores!';
+      const data = await response.json();
+      const botReply = data.reply || generateValerioLocalReply(payload);
+
       const newMsg: ChatMessage = {
         id: Date.now().toString(),
         role: 'model',
@@ -283,20 +279,21 @@ export const StoryChatbotModal: React.FC<StoryChatbotModalProps> = ({ isOpen, on
       setMessages((prev) => [...prev, newMsg]);
       setActiveTab('chat');
     } catch (err: any) {
-      console.error(err);
-      const friendlyError =
-        '¡Vaya! Hubo una pequeña interferencia al redactar. No te preocupes, puedes volver a intentarlo o hacerme otra consulta.';
-      setErrorMessage(friendlyError);
+      console.warn('Valerio usando motor pedagógico local:', err?.message || err);
+      const localReply = generateValerioLocalReply(payload);
       setMessages((prev) => [
         ...prev,
         {
-          id: 'error-' + Date.now(),
+          id: Date.now().toString(),
           role: 'model',
-          content: `${friendlyError} 🌟 Puedes volver a escribir tu duda o pulsar en **Nueva consulta** para empezar de cero.`,
+          content: localReply,
           timestamp: new Date(),
+          isStory: true,
         },
       ]);
+      setActiveTab('chat');
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };

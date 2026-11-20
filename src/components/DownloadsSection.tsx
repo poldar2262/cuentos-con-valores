@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, Printer, Palette, Sparkles, Heart } from 'lucide-react';
+import { Download, Palette, Sparkles, Heart } from 'lucide-react';
 import { Story } from '../types';
 import { COLORING_DESIGNS } from '../data/coloringSvgData';
 
@@ -35,7 +35,7 @@ export const DownloadsSection: React.FC<DownloadsSectionProps> = ({
             const design = COLORING_DESIGNS[story.coloringSheet.svgId];
 
             return (
-              <div
+              <article
                 key={story.id}
                 id={`download-card-${story.id}`}
                 className="bg-white rounded-3xl p-5 border-2 border-slate-200/80 hover:border-sky-400 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
@@ -46,7 +46,9 @@ export const DownloadsSection: React.FC<DownloadsSectionProps> = ({
                     {story.coloringSheet.lineartImage ? (
                       <img
                         src={story.coloringSheet.lineartImage}
-                        alt={story.coloringSheet.title}
+                        alt={`Dibujo para colorear de ${story.coloringSheet.title} (${story.value})`}
+                        width={896}
+                        height={1200}
                         className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
@@ -121,8 +123,8 @@ export const DownloadsSection: React.FC<DownloadsSectionProps> = ({
                     onClick={() => onOpenColoring(story)}
                     className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
                   >
-                    <Printer className="w-3.5 h-3.5" />
-                    <span>Lámina Imprimible / Pintar</span>
+                    <Palette className="w-3.5 h-3.5" />
+                    <span>Colorear / Descargar</span>
                   </button>
                   {story.coloringPdfUrl && (
                     <a
@@ -137,7 +139,7 @@ export const DownloadsSection: React.FC<DownloadsSectionProps> = ({
                     </a>
                   )}
                 </div>
-              </div>
+              </article>
             );
           })}
         </div>

@@ -41,9 +41,9 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Col 2: Secciones Rápidas */}
           <div>
-            <h4 className="font-display font-bold text-slate-900 text-sm mb-3">
+            <h3 className="font-display font-bold text-slate-900 text-sm mb-3">
               Explorar el Sitio
-            </h4>
+            </h3>
             <ul className="space-y-2 text-xs sm:text-sm text-slate-600 font-semibold">
               <li>
                 <a href="#cuentos" className="hover:text-amber-600 transition-colors">
@@ -77,6 +77,11 @@ export const Footer: React.FC<FooterProps> = ({
                   Guía de Valores y Virtudes
                 </a>
               </li>
+              <li>
+                <a href="#faq" className="hover:text-amber-600 transition-colors">
+                  Preguntas Frecuentes
+                </a>
+              </li>
               {onOpenManual && (
                 <li>
                   <button
@@ -103,9 +108,9 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Col 3: Valores destacados */}
           <div>
-            <h4 className="font-display font-bold text-slate-900 text-sm mb-3">
+            <h3 className="font-display font-bold text-slate-900 text-sm mb-3">
               Valores del Proyecto
-            </h4>
+            </h3>
             <div className="flex flex-wrap gap-1.5 text-xs">
               <span className="px-2.5 py-1 rounded-lg bg-amber-100/70 text-amber-800 font-bold">
                 Honestidad
@@ -127,7 +132,7 @@ export const Footer: React.FC<FooterProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-slate-500 mt-3">
-              Compatible para imprimir en cualquier impresora estándar doméstica o escolar.
+              Todos los cuentos y láminas pueden descargarse de forma directa y segura para leer o imprimir en casa o en clase.
             </p>
           </div>
         </div>

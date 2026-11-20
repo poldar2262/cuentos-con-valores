@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Navigation Links Desktop */}
-          <nav className="hidden lg:flex items-center gap-1.5 font-bold text-sm text-slate-700">
+          <nav aria-label="Navegación principal" className="hidden lg:flex items-center gap-1.5 font-bold text-sm text-slate-700">
             <a
               href="#cuentos"
               className="px-3 py-2 rounded-xl hover:bg-amber-100/70 hover:text-amber-800 transition-colors"

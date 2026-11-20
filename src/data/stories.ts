@@ -17,7 +17,7 @@ export const STORIES: Story[] = [
     coverImage: '/assets/mateo-telescopio-roto.jpg',
     pdfUrl: '', // Pendiente del enlace de Google Drive
     coloringPdfUrl: '',
-    audioUrl: 'https://cdn.freesound.org/previews/573/573381_11861866-lq.mp3',
+    audioUrl: '/audio/cajita-estrellas.wav',
     audioDuration: '4:20 min',
     moralLesson: 'Un error accidental le puede ocurrir a cualquiera; lo que define nuestro carácter es tener la honestidad y la valentía de reconocerlo de inmediato.',
     discussionQuestions: [
@@ -91,7 +91,7 @@ export const STORIES: Story[] = [
     coverImage: '/assets/una-mision-para-dos.jpg',
     pdfUrl: '',
     coloringPdfUrl: '',
-    audioUrl: 'https://cdn.freesound.org/previews/416/416632_5121236-lq.mp3',
+    audioUrl: '/audio/aventura-valiente.wav',
     audioDuration: '4:20 min',
     moralLesson: 'Un buen amigo no solo te acompaña en el juego: te escucha, valora tus ideas y te ayuda a llegar a lugares que jamás habrías alcanzado solo.',
     discussionQuestions: [
@@ -170,7 +170,7 @@ export const STORIES: Story[] = [
     coverImage: '/assets/mateo-paciencia-estelar.jpg',
     pdfUrl: '',
     coloringPdfUrl: '',
-    audioUrl: 'https://cdn.freesound.org/previews/384/384357_6995663-lq.mp3',
+    audioUrl: '/audio/suenos-calma.wav',
     audioDuration: '4:30 min',
     moralLesson: 'La paciencia no es sentarse a esperar sin más, sino saber guardar la calma con una sonrisa mientras las cosas maravillosas van madurando.',
     discussionQuestions: [
@@ -249,7 +249,7 @@ export const STORIES: Story[] = [
     coverImage: '/assets/el-mapa-de-los-sentimientos.jpg',
     pdfUrl: '',
     coloringPdfUrl: '',
-    audioUrl: 'https://cdn.freesound.org/previews/320/320655_5260872-lq.mp3',
+    audioUrl: '/audio/bosque-amigos.wav',
     audioDuration: '4:10 min',
     moralLesson: 'La empatía nos enseña a mirar con los ojos de los demás, escuchar con el corazón y acompañar a quien lo necesita sin juzgar.',
     discussionQuestions: [
@@ -328,7 +328,7 @@ export const STORIES: Story[] = [
     coverImage: '/assets/destello-corazon-valiente.jpg',
     pdfUrl: '',
     coloringPdfUrl: '',
-    audioUrl: 'https://cdn.freesound.org/previews/416/416632_5121236-lq.mp3',
+    audioUrl: '/audio/aventura-valiente.wav',
     audioDuration: '4:15 min',
     moralLesson: 'El valor no consiste en no tener miedo, sino en hacer lo correcto y vencer nuestros propios temores para ayudar a otro.',
     discussionQuestions: [
@@ -407,7 +407,7 @@ export const STORIES: Story[] = [
     coverImage: '/assets/la-luz-de-nazaret.jpg',
     pdfUrl: '',
     coloringPdfUrl: '',
-    audioUrl: 'https://cdn.freesound.org/previews/384/384357_6995663-lq.mp3',
+    audioUrl: '/audio/suenos-calma.wav',
     audioDuration: '5:30 min',
     moralLesson: 'Todos podemos ser luz para los demás a través de nuestras pequeñas y grandes acciones de amor y generosidad.',
     discussionQuestions: [
@@ -536,7 +536,7 @@ export const STORIES: Story[] = [
     coverImage: '/assets/una-mision-para-todos.jpg',
     pdfUrl: '',
     coloringPdfUrl: '',
-    audioUrl: 'https://cdn.freesound.org/previews/268/268822_4486188-lq.mp3',
+    audioUrl: '/audio/bosque-amigos.wav',
     audioDuration: '4:15 min',
     moralLesson: 'Ser generoso es tener un corazón ancho donde siempre quepa un amigo más. Cuando compartes tus juegos y tu alegría, la diversión se multiplica hasta el infinito.',
     discussionQuestions: [

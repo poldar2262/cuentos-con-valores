@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, FileText, Sparkles, HelpCircle, Heart, Volume2, Type, Download, ExternalLink } from 'lucide-react';
 import { Story } from '../types';
+import { speakInChunks, stopSpeech } from '../utils/speech';
 
 interface StoryReaderModalProps {
   story: Story | null;
@@ -46,12 +47,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
   };
 
   const readPageAloud = () => {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(currentPage.text);
-    utterance.lang = 'es-ES';
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
+    speakInChunks(currentPage.text, { rate: 0.9, pitch: 1.04 });
   };
 
   const fontClasses = {
@@ -165,7 +161,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
               id="btn-close-reader"
               type="button"
               onClick={() => {
-                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                stopSpeech();
                 onClose();
               }}
               className="w-8 h-8 rounded-full bg-slate-100 hover:bg-rose-100 hover:text-rose-600 text-slate-500 flex items-center justify-center transition-colors cursor-pointer"

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Volume2, VolumeX, Sparkles, Mic } from 'lucide-react';
+import { Play, Pause, RotateCcw, Volume2, VolumeX, Sparkles, Mic, Music } from 'lucide-react';
+import { speakInChunks, stopSpeech } from '../utils/speech';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -22,10 +23,23 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [useSpeechSynthesis, setUseSpeechSynthesis] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speechProgress, setSpeechProgress] = useState(0);
+  const [hasSpeechSynthesis, setHasSpeechSynthesis] = useState(false);
+  const [audioFailed, setAudioFailed] = useState(false);
+
+  useEffect(() => {
+    const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+    setHasSpeechSynthesis(supported);
+    // Default to full Spanish voice narration whenever story text & browser TTS exist
+    if (supported && storyFullText) {
+      setUseSpeechSynthesis(true);
+    }
+  }, [storyFullText]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    setAudioFailed(false);
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -45,8 +59,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     };
 
     const handleError = () => {
-      // Fallback cleanly to synthesized narration if external audio link is unavailable or blocked
       console.info(`Audio fallback activated for story: ${storyTitle}`);
+      setAudioFailed(true);
+      setIsPlaying(false);
+      if (storyFullText && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        setUseSpeechSynthesis(true);
+      }
     };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -60,59 +78,83 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, [storyTitle]);
+  }, [storyTitle, storyFullText, audioUrl]);
+
+  const handleSpeechNarration = () => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window) || !storyFullText) return;
+
+    if (isSpeaking) {
+      stopSpeech();
+      setIsSpeaking(false);
+      setIsPlaying(false);
+      return;
+    }
+
+    // Play soft background melody alongside narration if audio is available
+    if (audioRef.current && !audioFailed && !isMuted) {
+      audioRef.current.volume = 0.14;
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {});
+    }
+
+    setIsSpeaking(true);
+    setIsPlaying(true);
+    setSpeechProgress(0);
+
+    const textToRead = `${storyTitle}. ${storyFullText}`;
+    speakInChunks(textToRead, {
+      rate: 0.92,
+      pitch: 1.05,
+      onProgress: (idx, total) => {
+        setSpeechProgress(Math.round(((idx + 1) / total) * 100));
+      },
+      onEnd: () => {
+        audioRef.current?.pause();
+        setIsSpeaking(false);
+        setIsPlaying(false);
+        setSpeechProgress(0);
+      },
+      onError: () => {
+        audioRef.current?.pause();
+        setIsSpeaking(false);
+        setIsPlaying(false);
+      },
+    });
+  };
 
   const togglePlay = () => {
-    if (useSpeechSynthesis) {
+    if (useSpeechSynthesis || audioFailed) {
+      if (isSpeaking) {
+        audioRef.current?.pause();
+      }
       handleSpeechNarration();
       return;
     }
 
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio) {
+      if (hasSpeechSynthesis && storyFullText) {
+        setUseSpeechSynthesis(true);
+        handleSpeechNarration();
+      }
+      return;
+    }
 
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
     } else {
+      audio.volume = 0.65;
       audio
         .play()
         .then(() => setIsPlaying(true))
         .catch(() => {
-          // If browser policy or connection issues prevent audio, offer speech synthesis
-          setUseSpeechSynthesis(true);
-          handleSpeechNarration();
+          setAudioFailed(true);
+          if (hasSpeechSynthesis && storyFullText) {
+            setUseSpeechSynthesis(true);
+            handleSpeechNarration();
+          }
         });
-    }
-  };
-
-  const handleSpeechNarration = () => {
-    if (!('speechSynthesis' in window) || !storyFullText) return;
-
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      setIsPlaying(false);
-    } else {
-      window.speechSynthesis.cancel(); // cancel any active utterance
-      const utterance = new SpeechSynthesisUtterance(storyFullText);
-      utterance.lang = 'es-ES';
-      utterance.rate = 0.92; // Slightly slower, calm storytelling speed for kids
-      utterance.pitch = 1.05; // Friendly warm pitch
-
-      utterance.onend = () => {
-        setIsSpeaking(false);
-        setIsPlaying(false);
-      };
-
-      utterance.onerror = () => {
-        setIsSpeaking(false);
-        setIsPlaying(false);
-      };
-
-      window.speechSynthesis.speak(utterance);
-      setIsSpeaking(true);
-      setIsPlaying(true);
     }
   };
 
@@ -126,17 +168,35 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   const toggleMute = () => {
     if (audioRef.current) {
-      audioRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
+      const nextMuted = !isMuted;
+      audioRef.current.muted = nextMuted;
+      setIsMuted(nextMuted);
     }
   };
 
   const restartAudio = () => {
+    if (useSpeechSynthesis) {
+      audioRef.current?.pause();
+      stopSpeech();
+      setIsSpeaking(false);
+      setIsPlaying(false);
+      setSpeechProgress(0);
+      setTimeout(() => handleSpeechNarration(), 60);
+      return;
+    }
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
       setCurrentTime(0);
       if (!isPlaying) {
-        audioRef.current.play().then(() => setIsPlaying(true));
+        audioRef.current
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch(() => {
+            if (hasSpeechSynthesis && storyFullText) {
+              setUseSpeechSynthesis(true);
+              handleSpeechNarration();
+            }
+          });
       }
     }
   };
@@ -153,7 +213,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       id={`audio-player-${id}`}
       className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-3 shadow-xs hover:border-amber-300 transition-colors"
     >
-      <audio ref={audioRef} src={audioUrl} preload="metadata" />
+      <audio ref={audioRef} src={audioUrl} preload="metadata" loop />
 
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
@@ -161,12 +221,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             <Sparkles className="w-3.5 h-3.5" />
           </span>
           <span className="text-xs font-semibold text-amber-900 tracking-wide">
-            {isSpeaking ? 'Voz Narradora Infantil' : 'Audiocuento'}
+            {useSpeechSynthesis || isSpeaking ? 'Audiocuento Narrado' : 'Melodía Relajante'}
           </span>
         </div>
 
-        {/* TTS Toggle option */}
-        {'speechSynthesis' in window && storyFullText && (
+        {/* Mode Toggle option: Voice Narration vs Soft Melody */}
+        {hasSpeechSynthesis && storyFullText && (
           <button
             type="button"
             onClick={() => {
@@ -177,19 +237,22 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
               const nextMode = !useSpeechSynthesis;
               setUseSpeechSynthesis(nextMode);
               if (isSpeaking) {
-                window.speechSynthesis.cancel();
+                audioRef.current?.pause();
+                stopSpeech();
                 setIsSpeaking(false);
+                setIsPlaying(false);
+                setSpeechProgress(0);
               }
             }}
-            className={`text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors ${
+            className={`text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors cursor-pointer ${
               useSpeechSynthesis
                 ? 'bg-amber-200 text-amber-900 font-medium'
-                : 'text-amber-700/80 hover:text-amber-900 hover:bg-amber-100'
+                : 'bg-sky-100 text-sky-900 font-medium'
             }`}
-            title="Cambiar entre música/audiocuento y voz cuentacuentos en español"
+            title="Cambiar entre narración completa del cuento y solo melodía relajante"
           >
-            <Mic className="w-3 h-3" />
-            <span>{useSpeechSynthesis ? 'Voz activa' : 'Escuchar voz'}</span>
+            {useSpeechSynthesis ? <Music className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
+            <span>{useSpeechSynthesis ? 'Solo melodía' : 'Narrar cuento'}</span>
           </button>
         )}
       </div>
@@ -215,46 +278,44 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           <input
             type="range"
             min={0}
-            max={duration || 100}
-            value={currentTime}
+            max={useSpeechSynthesis ? 100 : duration || 100}
+            value={useSpeechSynthesis ? speechProgress : currentTime}
             onChange={handleSeek}
             disabled={useSpeechSynthesis}
-            className="w-full h-2 bg-amber-200/80 rounded-lg appearance-none cursor-pointer accent-amber-600 disabled:opacity-50"
+            className="w-full h-2 bg-amber-200/80 rounded-lg appearance-none cursor-pointer accent-amber-600 disabled:opacity-75"
             aria-label="Progreso del audio"
           />
           <div className="flex justify-between items-center text-[11px] text-amber-800/80 mt-1 font-medium">
-            <span>{formatTime(currentTime)}</span>
-            <span>{duration > 0 ? formatTime(duration) : durationLabel}</span>
+            <span>{useSpeechSynthesis ? `${speechProgress}%` : formatTime(currentTime)}</span>
+            <span>{useSpeechSynthesis ? `Narración (${durationLabel})` : duration > 0 ? formatTime(duration) : durationLabel}</span>
           </div>
         </div>
 
         {/* Quick controls */}
-        {!useSpeechSynthesis && (
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={restartAudio}
-              className="p-1.5 rounded-full text-amber-700 hover:bg-amber-200/60 transition-colors cursor-pointer"
-              title="Volver al inicio"
-              aria-label="Reiniciar audio"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={toggleMute}
-              className="p-1.5 rounded-full text-amber-700 hover:bg-amber-200/60 transition-colors cursor-pointer"
-              title={isMuted ? 'Activar sonido' : 'Silenciar'}
-              aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
-            >
-              {isMuted ? (
-                <VolumeX className="w-3.5 h-3.5" />
-              ) : (
-                <Volume2 className="w-3.5 h-3.5" />
-              )}
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={restartAudio}
+            className="p-1.5 rounded-full text-amber-700 hover:bg-amber-200/60 transition-colors cursor-pointer"
+            title="Volver al inicio"
+            aria-label="Reiniciar audio"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={toggleMute}
+            className="p-1.5 rounded-full text-amber-700 hover:bg-amber-200/60 transition-colors cursor-pointer"
+            title={isMuted ? 'Activar música de fondo' : 'Silenciar música de fondo'}
+            aria-label={isMuted ? 'Activar música de fondo' : 'Silenciar música de fondo'}
+          >
+            {isMuted ? (
+              <VolumeX className="w-3.5 h-3.5" />
+            ) : (
+              <Volume2 className="w-3.5 h-3.5" />
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -55,10 +55,10 @@ export const ValuesGuideSection: React.FC = () => {
             ✨ Educación Emocional
           </span>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-800">
-            Valores y Virtudes que Crecen con Ellos
+            Por qué educar con cuentos ilustrados y guía de valores
           </h2>
           <p className="mt-3 text-slate-600 text-sm sm:text-base leading-relaxed">
-            Cada historia está cuidadosamente estructurada para servir como disparador pedagógico en el hogar y en la escuela infantil.
+            Cada historia está cuidadosamente estructurada para servir como disparador pedagógico en el hogar y en la escuela infantil, ayudando a niños de 3 a 12 años a reflexionar mediante relatos cercanos.
           </p>
         </div>
 

@@ -36,9 +36,9 @@ export const Hero: React.FC<HeroProps> = ({
 
           {/* Main Hero Title */}
           <h1 className="font-display text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.15]">
-            Cuentos con Valores y{' '}
+            Cuentos infantiles con valores,{' '}
             <span className="text-amber-600 underline decoration-wavy decoration-amber-300 decoration-2">
-              Dibujos para Colorear
+              ilustraciones y dibujos para colorear
             </span>
           </h1>
 
@@ -47,9 +47,9 @@ export const Hero: React.FC<HeroProps> = ({
             Historias alegres y tiernas diseñadas para inspirar virtudes como la{' '}
             <strong className="text-slate-900 font-bold">honestidad</strong>, la{' '}
             <strong className="text-slate-900 font-bold">valentía</strong> y la{' '}
-            <strong className="text-slate-900 font-bold">empatía</strong>. Cada cuento incluye{' '}
-            <strong className="text-slate-900 font-bold">audiocuento integrado</strong>, lector digital en PDF y{' '}
-            <strong className="text-slate-900 font-bold">láminas imprimibles para colorear</strong>.
+            <strong className="text-slate-900 font-bold">empatía</strong> en niños de 3 a 12 años. Cada cuento incluye{' '}
+            <strong className="text-slate-900 font-bold">audiocuento integrado</strong>, lector digital y{' '}
+            <strong className="text-slate-900 font-bold">láminas descargables para colorear</strong> en casa o en el colegio.
           </p>
 
           {/* Feature Highlights Pills */}
@@ -60,7 +60,7 @@ export const Hero: React.FC<HeroProps> = ({
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white border border-sky-200 shadow-xs">
               <Palette className="w-4 h-4 text-sky-500" />
-              Láminas para Colorear (PDF)
+              Láminas para Colorear
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white border border-emerald-200 shadow-xs">
               <BookOpen className="w-4 h-4 text-emerald-500" />
@@ -68,19 +68,27 @@ export const Hero: React.FC<HeroProps> = ({
             </span>
           </div>
 
-          {/* Chatbot CTA Button */}
-          {onOpenChatbot && (
-            <div className="mt-7 flex justify-center">
+          {/* Primary CTAs */}
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="#cuentos"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm sm:text-base shadow-md transition-all transform hover:scale-105 active:scale-95"
+            >
+              <BookOpen className="w-5 h-5 text-amber-300" />
+              <span>Explorar cuentos por valor</span>
+            </a>
+
+            {onOpenChatbot && (
               <button
                 type="button"
                 onClick={onOpenChatbot}
                 className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-600 hover:to-amber-600 text-white font-bold text-sm sm:text-base shadow-lg shadow-amber-500/25 transition-all transform hover:scale-105 active:scale-95 cursor-pointer border-2 border-white/60"
               >
                 <Sparkles className="w-5 h-5 text-amber-100 animate-pulse" />
-                <span>✨ Habla con Valerio: ¡Crea un cuento para tu hijo/a (IA)!</span>
+                <span>✨ Habla con Valerio: ¡Crea un cuento (IA)!</span>
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Category Filter Chips */}
           <div className="mt-8 pt-6 border-t border-amber-200/60">

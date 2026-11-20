@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Lock,
@@ -19,9 +19,24 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
-  Key
+  Key,
+  Inbox,
+  Mail,
+  RefreshCw
 } from 'lucide-react';
 import { Story, ValueCategory } from '../types';
+
+interface SuggestionItem {
+  id: string;
+  name: string;
+  email: string;
+  valueSuggestion: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
+  emailSent?: boolean;
+  provider?: string;
+}
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -41,11 +56,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   onDeleteStory,
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
     return sessionStorage.getItem('admin_logged_in') === 'true';
   });
 
   // Password state
   const [hasSavedPassword, setHasSavedPassword] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
     return Boolean(localStorage.getItem('admin_password'));
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -65,7 +82,138 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [changePasswordMsg, setChangePasswordMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'nuevo' | 'gestionar' | 'drive' | 'seguridad'>('nuevo');
+  const [activeTab, setActiveTab] = useState<'nuevo' | 'gestionar' | 'buzon' | 'drive' | 'seguridad'>('nuevo');
+
+  // Buzón de sugerencias state
+  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [emailConfigured, setEmailConfigured] = useState(false);
+  const [mailProvider, setMailProvider] = useState<string>('inbox-only');
+  const [web3FormsInput, setWeb3FormsInput] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem('web3forms_key') || '';
+  });
+  const [formspreeInput, setFormspreeInput] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem('formspree_endpoint') || '';
+  });
+  const [relaySavedMsg, setRelaySavedMsg] = useState(false);
+
+  const loadSuggestions = async () => {
+    setLoadingSuggestions(true);
+    let serverList: SuggestionItem[] = [];
+    try {
+      const resp = await fetch('/api/suggestions');
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data.suggestions)) {
+          serverList = data.suggestions;
+        }
+        setEmailConfigured(Boolean(data.emailConfigured));
+        setMailProvider(data.provider || 'inbox-only');
+      }
+    } catch {
+      // Offline / static mode
+    }
+
+    let localList: SuggestionItem[] = [];
+    try {
+      if (typeof window !== 'undefined') {
+        const raw = JSON.parse(localStorage.getItem('cuentos_suggestions_inbox') || '[]');
+        if (Array.isArray(raw)) localList = raw;
+      }
+    } catch {
+      localList = [];
+    }
+
+    const seen = new Set(serverList.map((s) => s.id));
+    const merged = [...serverList, ...localList.filter((s) => !seen.has(s.id))];
+    merged.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    setSuggestions(merged);
+    setLoadingSuggestions(false);
+  };
+
+  useEffect(() => {
+    if (isOpen && isAuthenticated) {
+      loadSuggestions();
+    }
+  }, [isOpen, isAuthenticated]);
+
+  const handleMarkSuggestionRead = async (id: string, read: boolean) => {
+    setSuggestions((prev) => prev.map((s) => (s.id === id ? { ...s, read } : s)));
+    try {
+      if (typeof window !== 'undefined') {
+        const raw = JSON.parse(localStorage.getItem('cuentos_suggestions_inbox') || '[]');
+        if (Array.isArray(raw)) {
+          localStorage.setItem(
+            'cuentos_suggestions_inbox',
+            JSON.stringify(raw.map((s: SuggestionItem) => (s.id === id ? { ...s, read } : s)))
+          );
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    try {
+      await fetch(`/api/suggestions/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ read }),
+      });
+    } catch {
+      // Ignore
+    }
+  };
+
+  const handleDeleteSuggestion = async (id: string) => {
+    setSuggestions((prev) => prev.filter((s) => s.id !== id));
+    try {
+      if (typeof window !== 'undefined') {
+        const raw = JSON.parse(localStorage.getItem('cuentos_suggestions_inbox') || '[]');
+        if (Array.isArray(raw)) {
+          localStorage.setItem(
+            'cuentos_suggestions_inbox',
+            JSON.stringify(raw.filter((s: SuggestionItem) => s.id !== id))
+          );
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    try {
+      await fetch(`/api/suggestions/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    } catch {
+      // Ignore
+    }
+  };
+
+  const handleSaveRelayConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('web3forms_key', web3FormsInput.trim());
+      localStorage.setItem('formspree_endpoint', formspreeInput.trim());
+    }
+    try {
+      const resp = await fetch('/api/suggestions/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          web3formsKey: web3FormsInput.trim(),
+          formspreeEndpoint: formspreeInput.trim(),
+        }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        setEmailConfigured(Boolean(data.emailConfigured));
+      }
+    } catch {
+      setEmailConfigured(Boolean(web3FormsInput.trim() || formspreeInput.trim()));
+    }
+    setRelaySavedMsg(true);
+    setTimeout(() => setRelaySavedMsg(false), 3500);
+  };
+
+  const unreadSuggestionsCount = suggestions.filter((s) => !s.read).length;
 
   // New story form state
   const [title, setTitle] = useState('');
@@ -89,6 +237,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
   // Belén Recortable Drive Link
   const [belenDriveUrl, setBelenDriveUrl] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
     return localStorage.getItem('belen_drive_pdf_url') || '';
   });
   const [belenSavedMsg, setBelenSavedMsg] = useState<boolean>(false);
@@ -224,7 +373,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=600',
       pdfUrl: pdfUrl.trim() || undefined,
       coloringPdfUrl: coloringPdfUrl.trim() || undefined,
-      audioUrl: 'https://cdn.freesound.org/previews/573/573381_11861866-lq.mp3',
+      audioUrl: '/audio/bosque-amigos.wav',
       audioDuration: '3:50 min',
       moralLesson: moralLesson.trim() || `La virtud de ${value} nos orienta a actuar con rectitud y amor.`,
       discussionQuestions: [
@@ -495,6 +644,26 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               >
                 <Layers className="w-4 h-4 text-amber-600" />
                 <span>Gestionar Cuentos y Enlaces ({stories.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('buzon');
+                  loadSuggestions();
+                }}
+                className={`py-3 px-4 border-b-2 transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'buzon'
+                    ? 'border-amber-600 text-amber-900 bg-white rounded-t-xl font-black'
+                    : 'border-transparent hover:text-amber-800'
+                }`}
+              >
+                <Inbox className="w-4 h-4 text-rose-600" />
+                <span>Buzón ({suggestions.length})</span>
+                {unreadSuggestionsCount > 0 && (
+                  <span className="ml-0.5 px-1.5 py-0.5 text-[10px] rounded-full bg-rose-600 text-white font-bold">
+                    {unreadSuggestionsCount}
+                  </span>
+                )}
               </button>
               <button
                 type="button"
@@ -882,6 +1051,190 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* TAB 2B: BUZÓN DE SUGERENCIAS */}
+              {activeTab === 'buzon' && (
+                <div className="space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-amber-50/80 border border-amber-200">
+                    <div>
+                      <h4 className="font-display font-bold text-slate-900 text-base">
+                        📬 Sugerencias recibidas de familias y colegios
+                      </h4>
+                      <p className="text-xs text-slate-600 mt-0.5">
+                        Todas las sugerencias enviadas desde la web se guardan aquí al instante.
+                        {emailConfigured
+                          ? ` Reenvío automático a jchurizar@gmail.com activo (${mailProvider}).`
+                          : ' Configura abajo una clave gratuita si quieres recibir también una copia automática en jchurizar@gmail.com.'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={loadSuggestions}
+                      className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-amber-300 text-slate-700 font-bold text-xs flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${loadingSuggestions ? 'animate-spin' : ''}`} />
+                      <span>Actualizar</span>
+                    </button>
+                  </div>
+
+                  {suggestions.length === 0 ? (
+                    <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 text-xs">
+                      Todavía no hay sugerencias guardadas en el buzón. Cuando alguien envíe una idea desde &quot;Sugerir un Cuento&quot;, aparecerá aquí al instante.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {suggestions.map((item) => (
+                        <div
+                          key={item.id}
+                          className={`p-4 rounded-2xl border shadow-2xs space-y-2 ${
+                            item.read ? 'bg-white border-slate-200' : 'bg-amber-50/50 border-amber-300'
+                          }`}
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900">
+                                {item.valueSuggestion}
+                              </span>
+                              <span className="font-bold text-slate-900 text-sm">{item.name}</span>
+                              {item.email && (
+                                <span className="text-xs text-slate-500">({item.email})</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                              <span>
+                                {item.emailSent ? '✉️ Enviado a correo' : '📥 Guardado en buzón'}
+                              </span>
+                              <span>•</span>
+                              <span>
+                                {item.createdAt
+                                  ? new Date(item.createdAt).toLocaleDateString('es-ES', {
+                                      day: '2-digit',
+                                      month: 'short',
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })
+                                  : ''}
+                              </span>
+                            </div>
+                          </div>
+
+                          <p className="text-xs sm:text-sm text-slate-700 whitespace-pre-wrap bg-white/80 p-3 rounded-xl border border-slate-100">
+                            {item.message}
+                          </p>
+
+                          <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+                            {item.email && item.email.includes('@') && (
+                              <a
+                                href={`mailto:${item.email}?subject=${encodeURIComponent(`Re: Tu sugerencia en Cuentos con Valores (${item.valueSuggestion})`)}`}
+                                target="_top"
+                                className="px-3 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 font-bold text-xs flex items-center gap-1"
+                              >
+                                <Mail className="w-3.5 h-3.5" />
+                                <span>Responder</span>
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleMarkSuggestionRead(item.id, !item.read)}
+                              className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
+                            >
+                              {item.read ? 'Marcar no leída' : 'Marcar leída'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSuggestion(item.id)}
+                              className="px-2.5 py-1 rounded-lg text-rose-600 hover:bg-rose-50 font-bold text-xs flex items-center gap-1 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Borrar</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Configuración opcional de reenvío directo a Gmail */}
+                  <form
+                    onSubmit={handleSaveRelayConfig}
+                    className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3"
+                  >
+                    <div>
+                      <h5 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
+                        ⚙️ Reenvío automático al correo (jchurizar@gmail.com)
+                      </h5>
+                      <p className="text-xs text-slate-600 mt-1">
+                        Para recibir cada sugerencia también en tu bandeja de Gmail sin depender de FormSubmit, pega aquí tu clave gratuita de{' '}
+                        <a
+                          href="https://web3forms.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-amber-700 font-bold underline"
+                        >
+                          Web3Forms
+                        </a>{' '}
+                        o tu URL de{' '}
+                        <a
+                          href="https://formspree.io"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-amber-700 font-bold underline"
+                        >
+                          Formspree
+                        </a>
+                        :
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Clave de Web3Forms (opcional)
+                        </label>
+                        <input
+                          type="text"
+                          value={web3FormsInput}
+                          onChange={(e) => setWeb3FormsInput(e.target.value)}
+                          placeholder="Ej. a1b2c3d4-..."
+                          className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Endpoint de Formspree (opcional)
+                        </label>
+                        <input
+                          type="url"
+                          value={formspreeInput}
+                          onChange={(e) => setFormspreeInput(e.target.value)}
+                          placeholder="https://formspree.io/f/..."
+                          className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                      {relaySavedMsg ? (
+                        <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>¡Configuración guardada!</span>
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-slate-500">
+                          También admite variable de entorno RESEND_API_KEY en el servidor.
+                        </span>
+                      )}
+                      <button
+                        type="submit"
+                        className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Guardar Correo</span>
+                      </button>
+                    </div>
+                  </form>
                 </div>
               )}
 

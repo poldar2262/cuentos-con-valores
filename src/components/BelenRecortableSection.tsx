@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Scissors,
   Download,
@@ -21,11 +21,16 @@ interface BelenRecortableSectionProps {
 export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () => {
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [drivePdfUrl, setDrivePdfUrl] = useState<string>('');
 
-  // Get custom drive link if saved by admin
-  const [drivePdfUrl] = useState<string>(() => {
-    return localStorage.getItem('belen_drive_pdf_url') || '';
-  });
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('belen_drive_pdf_url');
+      if (saved) setDrivePdfUrl(saved);
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -102,6 +107,8 @@ export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () 
                 <img
                   src="/assets/belen_recortable.jpg"
                   alt="Lámina completa del Belén Recortable para niños con figuras y portal"
+                  width={1376}
+                  height={768}
                   className="w-full h-full object-contain filter contrast-105 group-hover:scale-102 transition-transform duration-300"
                   loading="lazy"
                 />
