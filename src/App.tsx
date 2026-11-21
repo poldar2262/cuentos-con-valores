@@ -1,4 +1,12 @@
 import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import {
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+  useParams,
+  Link,
+} from 'react-router-dom';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { StoryCard } from './components/StoryCard';
@@ -7,15 +15,18 @@ import { BelenRecortableSection } from './components/BelenRecortableSection';
 import { ValuesGuideSection } from './components/ValuesGuideSection';
 import { PrayersSection } from './components/PrayersSection';
 import { FaqSection } from './components/FaqSection';
-import { StoryChatbotLauncher } from './components/StoryChatbotLauncher';
-import { Footer } from './components/Footer';
+import { SeoHead } from './components/SeoHead';
 import { STORIES } from './data/stories';
 import { Story, ValueCategory } from './types';
 import { BookOpen, Smile } from 'lucide-react';
-
+import { StoryChatbotLauncher } from './components/StoryChatbotLauncher';
+import { Footer } from './components/Footer';
 import {
   StoryDetailPage,
+  CatalogPage,
   ValueLandingPage,
+  ParentsTeachersGuidePage,
+  HomePedagogicalSection,
   BelenRecortablePage,
   ColoringGalleryPage,
   PrayersPage,
@@ -23,10 +34,9 @@ import {
   LegalPrivacyPage,
 } from './components/PageViews';
 import {
-  getRouteSeoMeta,
-  getValueSlug,
-  normalizePathname,
-  resolveRoute,
+  VALUES_SEO,
+  getStoriesForValue,
+  getValueUrl,
 } from './data/seoRoutes';
 
 const StoryReaderModal = lazy(() =>
@@ -59,22 +69,76 @@ const ALL_CATEGORIES: ValueCategory[] = [
   'Amistad',
 ];
 
-interface AppProps {
-  initialPathname?: string;
+function StoryRouteView({
+  storiesList,
+  onOpenReaderModal,
+  onOpenColoring,
+}: {
+  storiesList: Story[];
+  onOpenReaderModal: (s: Story) => void;
+  onOpenColoring: (s: Story) => void;
+}) {
+  const { slugCuento } = useParams<{ slugCuento: string }>();
+  const story = storiesList.find((s) => s.id === slugCuento);
+
+  if (!story) {
+    return (
+      <div className="py-16 max-w-xl mx-auto px-4 text-center">
+        <h1 className="font-display text-3xl font-bold text-slate-900 mb-3">
+          Cuento no encontrado
+        </h1>
+        <p className="text-slate-600 mb-6">
+          No encontramos ese cuento en nuestra biblioteca, pero puedes explorar todo nuestro catálogo gratuito.
+        </p>
+        <Link
+          to="/cuentos"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-amber-500 text-white font-bold text-sm"
+        >
+          Ver catálogo de cuentos
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <StoryDetailPage
+      story={story}
+      allStories={storiesList}
+      onOpenReaderModal={onOpenReaderModal}
+      onOpenColoring={onOpenColoring}
+    />
+  );
 }
 
-export default function App({ initialPathname = '/' }: AppProps) {
+function ValueRouteView({
+  storiesList,
+  onOpenColoring,
+}: {
+  storiesList: Story[];
+  onOpenColoring: (s: Story) => void;
+}) {
+  const { slugValor } = useParams<{ slugValor: string }>();
+  const valueInfo = VALUES_SEO.find((v) => v.slug === slugValor) || VALUES_SEO[0];
+  const matchingStories = getStoriesForValue(valueInfo, storiesList);
+
+  return (
+    <ValueLandingPage
+      valueInfo={valueInfo}
+      matchingStories={matchingStories}
+      onOpenColoring={onOpenColoring}
+    />
+  );
+}
+
+export default function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [selectedCategory, setSelectedCategory] = useState<ValueCategory>('Todos');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [currentPath, setCurrentPath] = useState<string>(() =>
-    typeof window !== 'undefined'
-      ? normalizePathname(window.location.pathname)
-      : normalizePathname(initialPathname)
-  );
-
-  // Stories list state (initializes cleanly with STORIES for SSR/hydration, then syncs localStorage)
   const [storiesList, setStoriesList] = useState<Story[]>(STORIES);
 
+  // Sync localStorage custom stories cleanly after hydration
   useEffect(() => {
     try {
       const saved = localStorage.getItem('cuentos_custom_list');
@@ -84,9 +148,7 @@ export default function App({ initialPathname = '/' }: AppProps) {
           const cleaned = parsed.map((item: Story) => {
             const updated = { ...item };
             const baseStory = STORIES.find((s) => s.id === updated.id);
-            if (updated.pdfUrl && updated.pdfUrl.includes('_demo/view')) {
-              updated.pdfUrl = '';
-            }
+            if (updated.pdfUrl && updated.pdfUrl.includes('_demo/view')) updated.pdfUrl = '';
             if (updated.coloringPdfUrl && updated.coloringPdfUrl.includes('_demo/view')) {
               updated.coloringPdfUrl = '';
             }
@@ -106,6 +168,9 @@ export default function App({ initialPathname = '/' }: AppProps) {
                   lineartImage: baseStory.coloringSheet.lineartImage,
                 };
               }
+              if (!updated.practicalActivity && baseStory.practicalActivity) {
+                updated.practicalActivity = baseStory.practicalActivity;
+              }
             } else if (!updated.audioUrl || updated.audioUrl.endsWith('.wav') || updated.audioUrl.includes('freesound.org')) {
               updated.audioUrl = '/audio/telescopio-honestidad.mp3';
             }
@@ -120,48 +185,19 @@ export default function App({ initialPathname = '/' }: AppProps) {
     }
   }, []);
 
-  // Listen to browser back/forward history
+  // Scroll to top or hash when route changes
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const handlePopState = () => {
-      setCurrentPath(normalizePathname(window.location.pathname));
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  // Update document head metadata dynamically on SPA navigation
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const seo = getRouteSeoMeta(currentPath);
-    document.title = seo.title;
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) metaDesc.setAttribute('content', seo.description);
-    const canonicalEl = document.querySelector('link[rel="canonical"]');
-    if (canonicalEl) canonicalEl.setAttribute('href', seo.canonical);
-  }, [currentPath]);
-
-  const navigateTo = (href: string) => {
-    if (typeof window === 'undefined') return;
-    const [rawPath, hashPart] = href.split('#');
-    const nextPath = normalizePathname(rawPath || '/');
-
-    if (normalizePathname(window.location.pathname) !== nextPath || window.location.hash !== (hashPart ? `#${hashPart}` : '')) {
-      window.history.pushState({}, '', hashPart ? `${nextPath}#${hashPart}` : nextPath);
-    }
-    setCurrentPath(nextPath);
-
-    if (hashPart) {
+    if (location.hash) {
+      const targetId = location.hash.replace('#', '');
       setTimeout(() => {
-        const el = document.getElementById(hashPart);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
-        }
+        const el = document.getElementById(targetId);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
       }, 60);
     } else {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  };
+  }, [location.pathname, location.hash]);
 
   // Modals state
   const [readingStory, setReadingStory] = useState<Story | null>(null);
@@ -179,8 +215,8 @@ export default function App({ initialPathname = '/' }: AppProps) {
 
   const handleSearchChange = (q: string) => {
     setSearchQuery(q);
-    if (q.trim() && currentPath !== '/') {
-      navigateTo('/#cuentos');
+    if (q.trim() && location.pathname !== '/') {
+      navigate('/#cuentos');
     }
   };
 
@@ -214,7 +250,6 @@ export default function App({ initialPathname = '/' }: AppProps) {
     }
   };
 
-  // Filtered stories
   const filteredStories = useMemo(() => {
     return storiesList.filter((story) => {
       const matchesCategory =
@@ -233,14 +268,126 @@ export default function App({ initialPathname = '/' }: AppProps) {
     });
   }, [storiesList, selectedCategory, searchQuery]);
 
-  const resolvedRoute = useMemo(
-    () => resolveRoute(currentPath, storiesList),
-    [currentPath, storiesList]
+  const homeElement = (
+    <>
+      <Hero
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        categories={ALL_CATEGORIES}
+        totalStories={filteredStories.length}
+        onOpenChatbot={openChatbot}
+      />
+
+      {/* Stories Section Grid */}
+      <section id="cuentos" className="py-10 sm:py-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-xl bg-amber-400 text-amber-950">
+                <BookOpen className="w-5 h-5" />
+              </span>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
+                {selectedCategory === 'Todos'
+                  ? '¿Qué cuentos infantiles con valores puedes leer y escuchar hoy?'
+                  : `Cuentos de ${selectedCategory}`}
+              </h2>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Escucha el audiocuento en el reproductor o entra en el cuento para leerlo completo en familia
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {selectedCategory !== 'Todos' && (
+              <Link
+                to={getValueUrl(selectedCategory)}
+                className="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-900 hover:bg-amber-200 transition-colors"
+              >
+                Abrir guía de {selectedCategory} →
+              </Link>
+            )}
+            {(selectedCategory !== 'Todos' || searchQuery) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory('Todos');
+                  setSearchQuery('');
+                }}
+                className="text-xs font-bold text-amber-600 hover:text-amber-800 underline cursor-pointer"
+              >
+                Ver todos
+              </button>
+            )}
+            <Link
+              to="/cuentos"
+              className="text-xs sm:text-sm font-bold text-amber-800 hover:underline"
+            >
+              Catálogo completo por edad →
+            </Link>
+          </div>
+        </div>
+
+        {filteredStories.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+            {filteredStories.map((story) => (
+              <StoryCard
+                key={story.id}
+                story={story}
+                onOpenColoring={(s) => setColoringStory(s)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 px-4 bg-white rounded-3xl border-2 border-dashed border-amber-300 max-w-xl mx-auto">
+            <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
+              <Smile className="w-8 h-8" />
+            </div>
+            <h3 className="font-display text-xl font-bold text-slate-800">
+              No encontramos ningún cuento con ese término
+            </h3>
+            <p className="text-sm text-slate-500 mt-1">
+              Prueba buscando otro valor como &quot;Honestidad&quot;, &quot;Valentía&quot; o borra el filtro.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory('Todos');
+                setSearchQuery('');
+              }}
+              className="mt-5 px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-xs transition-colors cursor-pointer"
+            >
+              Mostrar todos los cuentos
+            </button>
+          </div>
+        )}
+      </section>
+
+      <DownloadsSection
+        stories={storiesList}
+        onOpenColoring={(s) => setColoringStory(s)}
+      />
+
+      <BelenRecortableSection
+        onOpenColoringStory={(storyId) => {
+          const found = storiesList.find((s) => s.id === storyId);
+          if (found) setColoringStory(found);
+        }}
+      />
+
+      <PrayersSection />
+
+      <ValuesGuideSection />
+
+      <HomePedagogicalSection onOpenContact={() => setIsContactOpen(true)} />
+
+      <FaqSection />
+    </>
   );
 
   return (
     <div className="min-h-screen flex flex-col bg-amber-50/40 text-slate-800 font-sans">
-      {/* Top Navigation */}
+      <SeoHead stories={storiesList} />
+
       <Header
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
@@ -248,180 +395,86 @@ export default function App({ initialPathname = '/' }: AppProps) {
         onOpenManual={() => setIsManualOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenChatbot={openChatbot}
-        onNavigate={navigateTo}
       />
 
-      {/* Main Content Area */}
       <main className="flex-1">
-        {resolvedRoute.type === 'story' ? (
-          <StoryDetailPage
-            story={resolvedRoute.story}
-            allStories={storiesList}
-            onNavigate={navigateTo}
-            onOpenReaderModal={(s) => setReadingStory(s)}
-            onOpenColoring={(s) => setColoringStory(s)}
+        <Routes>
+          <Route path="/" element={homeElement} />
+          <Route
+            path="/cuentos"
+            element={
+              <CatalogPage
+                stories={storiesList}
+                onOpenColoring={(s) => setColoringStory(s)}
+              />
+            }
           />
-        ) : resolvedRoute.type === 'value' ? (
-          <ValueLandingPage
-            valueInfo={resolvedRoute.valueInfo}
-            matchingStories={resolvedRoute.stories}
-            onNavigate={navigateTo}
-            onOpenReaderModal={(s) => setReadingStory(s)}
-            onOpenColoring={(s) => setColoringStory(s)}
+          <Route
+            path="/valores/:slugValor"
+            element={
+              <ValueRouteView
+                storiesList={storiesList}
+                onOpenColoring={(s) => setColoringStory(s)}
+              />
+            }
           />
-        ) : resolvedRoute.type === 'belen' ? (
-          <BelenRecortablePage onNavigate={navigateTo} allStories={storiesList} />
-        ) : resolvedRoute.type === 'coloring' ? (
-          <ColoringGalleryPage
-            stories={storiesList}
-            onOpenColoring={(s) => setColoringStory(s)}
-            onNavigate={navigateTo}
+          <Route
+            path="/cuento/:slugCuento"
+            element={
+              <StoryRouteView
+                storiesList={storiesList}
+                onOpenReaderModal={(s) => setReadingStory(s)}
+                onOpenColoring={(s) => setColoringStory(s)}
+              />
+            }
           />
-        ) : resolvedRoute.type === 'prayers' ? (
-          <PrayersPage onNavigate={navigateTo} />
-        ) : resolvedRoute.type === 'about' ? (
-          <AboutAuthorPage
-            onNavigate={navigateTo}
-            onOpenContact={() => setIsContactOpen(true)}
+          <Route
+            path="/cuentos/:slugCuento"
+            element={
+              <StoryRouteView
+                storiesList={storiesList}
+                onOpenReaderModal={(s) => setReadingStory(s)}
+                onOpenColoring={(s) => setColoringStory(s)}
+              />
+            }
           />
-        ) : resolvedRoute.type === 'legal' ? (
-          <LegalPrivacyPage
-            onNavigate={navigateTo}
-            onOpenContact={() => setIsContactOpen(true)}
+          <Route path="/guia-padres-docentes" element={<ParentsTeachersGuidePage />} />
+          <Route
+            path="/sobre-nosotros"
+            element={<AboutAuthorPage onOpenContact={() => setIsContactOpen(true)} />}
           />
-        ) : (
-          <>
-            {/* Hero Banner with Title, Intro and Filter Pills */}
-            <Hero
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-              categories={ALL_CATEGORIES}
-              totalStories={filteredStories.length}
-              onOpenChatbot={openChatbot}
-              onNavigate={navigateTo}
-            />
-
-            {/* Stories Section Grid */}
-            <section id="cuentos" className="py-10 sm:py-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 rounded-xl bg-amber-400 text-amber-950">
-                      <BookOpen className="w-5 h-5" />
-                    </span>
-                    <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-                      {selectedCategory === 'Todos'
-                        ? 'Explora nuestros cuentos según el valor que quieras enseñar'
-                        : `Cuentos de ${selectedCategory}`}
-                    </h2>
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Escucha el audiocuento en el reproductor o entra en el cuento para leerlo completo en familia
-                  </p>
-                </div>
-
-                {/* Active filter badge / reset / direct value page link */}
-                {(selectedCategory !== 'Todos' || searchQuery) && (
-                  <div className="flex flex-wrap items-center gap-3">
-                    {selectedCategory !== 'Todos' && (
-                      <a
-                        href={`/valores/${getValueSlug(selectedCategory)}/`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          navigateTo(`/valores/${getValueSlug(selectedCategory)}/`);
-                        }}
-                        className="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-900 hover:bg-amber-200 transition-colors"
-                      >
-                        Abrir guía de {selectedCategory} →
-                      </a>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedCategory('Todos');
-                        setSearchQuery('');
-                      }}
-                      className="text-xs font-bold text-amber-600 hover:text-amber-800 underline cursor-pointer"
-                    >
-                      Ver todos
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Cards Grid */}
-              {filteredStories.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-                  {filteredStories.map((story) => (
-                    <StoryCard
-                      key={story.id}
-                      story={story}
-                      onOpenReader={(s) => setReadingStory(s)}
-                      onOpenColoring={(s) => setColoringStory(s)}
-                      onNavigate={navigateTo}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16 px-4 bg-white rounded-3xl border-2 border-dashed border-amber-300 max-w-xl mx-auto">
-                  <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
-                    <Smile className="w-8 h-8" />
-                  </div>
-                  <h3 className="font-display text-xl font-bold text-slate-800">
-                    No encontramos ningún cuento con ese término
-                  </h3>
-                  <p className="text-sm text-slate-500 mt-1">
-                    Prueba buscando otro valor como &quot;Honestidad&quot;, &quot;Valentía&quot; o borra el filtro.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedCategory('Todos');
-                      setSearchQuery('');
-                    }}
-                    className="mt-5 px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-xs transition-colors cursor-pointer"
-                  >
-                    Mostrar todos los cuentos
-                  </button>
-                </div>
-              )}
-            </section>
-
-            {/* Section of Direct Downloads (Coloring sheets and printable resources) */}
-            <DownloadsSection
-              stories={storiesList}
-              onOpenColoring={(s) => setColoringStory(s)}
-            />
-
-            {/* Belén Recortable Navideño (Craft activity for children & families) */}
-            <BelenRecortableSection
-              onOpenColoringStory={(storyId) => {
-                const found = storiesList.find((s) => s.id === storyId);
-                if (found) setColoringStory(found);
-              }}
-            />
-
-            {/* Dedicated Section for Children's Prayers & Moments of Family Calm */}
-            <PrayersSection />
-
-            {/* Guide of values and virtues for parents, teachers & catechesis */}
-            <ValuesGuideSection onNavigate={navigateTo} />
-
-            {/* Visible FAQ Section for families and schools */}
-            <FaqSection />
-          </>
-        )}
+          <Route
+            path="/sobre-el-autor"
+            element={<AboutAuthorPage onOpenContact={() => setIsContactOpen(true)} />}
+          />
+          <Route
+            path="/belen-recortable"
+            element={<BelenRecortablePage allStories={storiesList} />}
+          />
+          <Route
+            path="/dibujos-para-colorear"
+            element={
+              <ColoringGalleryPage
+                stories={storiesList}
+                onOpenColoring={(s) => setColoringStory(s)}
+              />
+            }
+          />
+          <Route path="/oraciones" element={<PrayersPage />} />
+          <Route
+            path="/privacidad-y-aviso-legal"
+            element={<LegalPrivacyPage onOpenContact={() => setIsContactOpen(true)} />}
+          />
+          <Route path="*" element={homeElement} />
+        </Routes>
       </main>
 
-      {/* Footer */}
       <Footer
         onOpenContact={() => setIsContactOpen(true)}
         onOpenManual={() => setIsManualOpen(true)}
         onOpenChatbot={openChatbot}
-        onNavigate={navigateTo}
       />
 
-      {/* Interactive Story Reader Modal */}
       {readingStory && (
         <Suspense fallback={null}>
           <StoryReaderModal
@@ -435,7 +488,6 @@ export default function App({ initialPathname = '/' }: AppProps) {
         </Suspense>
       )}
 
-      {/* Interactive Coloring Studio Modal */}
       {coloringStory && (
         <Suspense fallback={null}>
           <ColoringStudioModal
@@ -445,7 +497,6 @@ export default function App({ initialPathname = '/' }: AppProps) {
         </Suspense>
       )}
 
-      {/* Contact / Suggestion Modal */}
       {isContactOpen && (
         <Suspense fallback={null}>
           <ContactModal
@@ -455,7 +506,6 @@ export default function App({ initialPathname = '/' }: AppProps) {
         </Suspense>
       )}
 
-      {/* Complete User Manual Modal */}
       {isManualOpen && (
         <Suspense fallback={null}>
           <ManualModal
@@ -469,7 +519,6 @@ export default function App({ initialPathname = '/' }: AppProps) {
         </Suspense>
       )}
 
-      {/* Private Admin Panel Modal */}
       {isAdminOpen && (
         <Suspense fallback={null}>
           <AdminModal
@@ -483,10 +532,8 @@ export default function App({ initialPathname = '/' }: AppProps) {
         </Suspense>
       )}
 
-      {/* Floating Magic Launcher for AI Story Chatbot */}
       <StoryChatbotLauncher onClick={openChatbot} />
 
-      {/* Interactive AI Story Chatbot Modal (lazy-loaded on first open, then preserved) */}
       {hasOpenedChatbot && (
         <Suspense fallback={null}>
           <StoryChatbotModal

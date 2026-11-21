@@ -1,49 +1,14 @@
 import React from 'react';
 import { HelpCircle, BookOpen, Sparkles, Palette, GraduationCap, ShieldCheck } from 'lucide-react';
+import { HOME_FAQS } from '../data/seoRoutes';
 
-const FAQS = [
-  {
-    question: '¿Los cuentos ilustrados y las láminas para colorear son gratuitos?',
-    answer:
-      'Sí, el 100% de los cuentos con valores, los audiocuentos narrados, las oraciones infantiles, el Belén recortable y las láminas para colorear son de libre acceso y gratuitos para familias, docentes y catequistas. No necesitas registrarte ni crear cuentas.',
-    icon: Sparkles,
-    color: 'text-amber-600 bg-amber-50 border-amber-200',
-  },
-  {
-    question: '¿Para qué edades están recomendados estos cuentos infantiles?',
-    answer:
-      'Las historias están pensadas para acompañar desde los 3 hasta los 12 años: cuentos breves y visuales para Infantil (3-5 años), relatos con moraleja y diálogo para primeros lectores (6-8 años) y narraciones más profundas para Primaria (9-12 años).',
-    icon: BookOpen,
-    color: 'text-sky-600 bg-sky-50 border-sky-200',
-  },
-  {
-    question: '¿Cómo puedo usar los cuentos y actividades en el aula o en familia?',
-    answer:
-      'Cada historia combina lectura digital, narración en audio, preguntas de reflexión al final del cuento y un dibujo descargable relacionado con la trama para trabajar el valor mediante la creatividad manual y la conversación.',
-    icon: GraduationCap,
-    color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
-  },
-  {
-    question: '¿Es seguro el contenido generado por Valerio para los niños?',
-    answer:
-      'Valerio está configurado con criterios pedagógicos estrictos para redactar historias amables, respetuosas y libres de violencia, siempre enfocadas en virtudes positivas como la empatía, la honestidad, la paciencia o la amistad. Como ocurre con cualquier herramienta basada en inteligencia artificial, recomendamos el acompañamiento y supervisión de madres, padres o docentes durante su uso.',
-    icon: ShieldCheck,
-    color: 'text-indigo-600 bg-indigo-50 border-indigo-200',
-  },
-  {
-    question: '¿Cómo se descargan los cuentos y dibujos para leer o imprimir en casa?',
-    answer:
-      'En cada página de cuento, lámina de dibujo, oración o en el Belén recortable encontrarás botones de descarga directa para guardar los materiales en tu ordenador, tablet o móvil e imprimirlos fácilmente cuando quieras.',
-    icon: Palette,
-    color: 'text-rose-600 bg-rose-50 border-rose-200',
-  },
-  {
-    question: '¿Tenéis recursos con valores cristianos para catequesis y Navidad?',
-    answer:
-      'Sí. Contamos con una sección específica de oraciones cortas infantiles, el cuento ilustrado para colorear La Luz de Nazaret y nuestro Belén recortable A4 listo para armar en parroquias, colegios y familias durante el Adviento y la Navidad.',
-    icon: Sparkles,
-    color: 'text-amber-700 bg-amber-50 border-amber-200',
-  },
+const FAQ_ICONS = [
+  { icon: Sparkles, color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  { icon: BookOpen, color: 'text-sky-600 bg-sky-50 border-sky-200' },
+  { icon: GraduationCap, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
+  { icon: ShieldCheck, color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
+  { icon: Palette, color: 'text-rose-600 bg-rose-50 border-rose-200' },
+  { icon: Sparkles, color: 'text-amber-700 bg-amber-50 border-amber-200' },
 ];
 
 export const FaqSection: React.FC = () => {
@@ -56,16 +21,17 @@ export const FaqSection: React.FC = () => {
             Dudas Frecuentes
           </span>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900">
-            Preguntas frecuentes sobre Cuentos y Valores
+            ¿Tienes dudas sobre Cuentos y Valores? Preguntas frecuentes
           </h2>
           <p className="mt-3 text-slate-600 text-sm sm:text-base leading-relaxed">
-            Información práctica sobre edades recomendadas, uso en colegios y descarga gratuita de nuestros recursos educativos.
+            Respuestas claras sobre edades recomendadas, uso educativo en colegios y descarga gratuita de nuestros materiales.
           </p>
         </div>
 
         <div className="space-y-4">
-          {FAQS.map((faq) => {
-            const Icon = faq.icon;
+          {HOME_FAQS.map((faq, idx) => {
+            const style = FAQ_ICONS[idx % FAQ_ICONS.length];
+            const Icon = style.icon;
             return (
               <details
                 key={faq.question}
@@ -74,13 +40,13 @@ export const FaqSection: React.FC = () => {
               >
                 <summary className="flex items-center justify-between gap-3 cursor-pointer list-none font-display font-bold text-base sm:text-lg text-slate-900">
                   <span className="flex items-center gap-3">
-                    <span className={`p-2 rounded-xl border shrink-0 ${faq.color}`}>
+                    <span className={`p-2 rounded-xl border shrink-0 ${style.color}`}>
                       <Icon className="w-4 h-4" />
                     </span>
                     <span>{faq.question}</span>
                   </span>
                 </summary>
-                <p className="mt-3 pl-12 text-sm text-slate-600 leading-relaxed">
+                <p className="mt-3 pl-12 text-sm text-slate-700 leading-relaxed">
                   {faq.answer}
                 </p>
               </details>

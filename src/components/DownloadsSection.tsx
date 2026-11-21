@@ -22,7 +22,7 @@ export const DownloadsSection: React.FC<DownloadsSectionProps> = ({
             Rincón de Material Imprimible
           </span>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-800 tracking-tight">
-            Descargas Directas: Dibujos para Colorear (PDF)
+            ¿Qué láminas y dibujos para colorear acompañan cada cuento?
           </h2>
           <p className="mt-3 text-slate-600 text-sm sm:text-base leading-relaxed">
             Todas las láminas listas para imprimir en casa o en el aula escolar. Fomenta la creatividad motriz mientras los pequeños interiorizan valores esenciales.
@@ -46,7 +46,7 @@ export const DownloadsSection: React.FC<DownloadsSectionProps> = ({
                     {story.coloringSheet.lineartImage ? (
                       <img
                         src={story.coloringSheet.lineartImage}
-                        alt={`Dibujo para colorear de ${story.coloringSheet.title} (${story.value})`}
+                        alt={`Ilustración infantil para colorear sobre la ${story.value.toLowerCase()} en el cuento ${story.title}`}
                         width={896}
                         height={1200}
                         className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"

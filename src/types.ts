@@ -17,6 +17,7 @@ export interface Story {
   audioUrl: string;
   audioDuration: string;
   moralLesson: string;
+  practicalActivity?: string;
   discussionQuestions: string[];
   pages: {
     pageNumber: number;

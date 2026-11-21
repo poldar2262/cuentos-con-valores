@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, ShieldCheck, Smile, Gift, Hourglass, Users } from 'lucide-react';
 
 const VALUES_DATA = [
@@ -7,15 +8,17 @@ const VALUES_DATA = [
     slug: 'honestidad',
     icon: ShieldCheck,
     color: 'bg-amber-100 text-amber-800 border-amber-300',
-    description: 'Aprender a decir la verdad con valentía, asumiendo los errores sin miedo y construyendo confianza mutua.',
-    characterRef: 'Mateo y su compañera Mei (Mateo y el Misterio del Telescopio Roto)',
+    description:
+      'Aprender a decir la verdad con valentía, asumiendo los errores sin miedo y construyendo confianza mutua.',
+    characterRef: 'Mateo y Mei (Mateo y el Misterio del Telescopio Roto)',
   },
   {
     title: 'Valentía',
     slug: 'valentia',
     icon: Heart,
     color: 'bg-rose-100 text-rose-800 border-rose-300',
-    description: 'Enfrentar los temores cotidianos para hacer lo correcto y tender una mano compasiva a quien lo necesita.',
+    description:
+      'Enfrentar los temores cotidianos para hacer lo correcto y tender una mano compasiva a quien lo necesita.',
     characterRef: 'Valerio y Elara (El Destello del Corazón Valiente)',
   },
   {
@@ -23,7 +26,8 @@ const VALUES_DATA = [
     slug: 'empatia',
     icon: Smile,
     color: 'bg-sky-100 text-sky-800 border-sky-300',
-    description: 'Saber escuchar en silencio, ponerse en los zapatos del compañero y comprender cómo se siente antes de juzgar.',
+    description:
+      'Saber escuchar en silencio, ponerse en los zapatos del compañero y comprender cómo se siente antes de juzgar.',
     characterRef: 'Lucas, Sofía y Tomás (El Mapa de los Sentimientos)',
   },
   {
@@ -31,7 +35,8 @@ const VALUES_DATA = [
     slug: 'generosidad',
     icon: Gift,
     color: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-    description: 'Compartir lo bueno que tenemos, desde sonrisas y tiempo hasta dar una mano sin esperar nada a cambio.',
+    description:
+      'Compartir lo bueno que tenemos, desde sonrisas y juegos hasta dar una mano sin esperar nada a cambio.',
     characterRef: 'La Luz de Nazaret y Una Misión para Todos',
   },
   {
@@ -39,24 +44,22 @@ const VALUES_DATA = [
     slug: 'paciencia',
     icon: Hourglass,
     color: 'bg-teal-100 text-teal-800 border-teal-300',
-    description: 'Comprender que las cosas hermosas toman su tiempo. Paso a pasito y con constancia se logran las metas.',
+    description:
+      'Comprender que las cosas hermosas necesitan tiempo. Paso a pasito y con constancia se alcanzan las metas.',
     characterRef: 'Mateo y Don Julián (La Paciencia Estelar)',
   },
   {
-    title: 'Amistad y Cooperación',
-    slug: 'amistad',
+    title: 'Respeto y Amistad',
+    slug: 'respeto',
     icon: Users,
     color: 'bg-indigo-100 text-indigo-800 border-indigo-300',
-    description: 'Descubrir que el trabajo en equipo hace los pesos más ligeros y convierte cualquier rincón en una gran aventura compartida.',
+    description:
+      'Descubrir que escuchar, cuidar el aula y remar en equipo hace las cargas ligeras y une a los amigos.',
     characterRef: 'Leo, Maya y Oliver (Una Misión para Dos)',
   },
 ];
 
-interface ValuesGuideSectionProps {
-  onNavigate?: (href: string) => void;
-}
-
-export const ValuesGuideSection: React.FC<ValuesGuideSectionProps> = ({ onNavigate }) => {
+export const ValuesGuideSection: React.FC = () => {
   return (
     <section id="valores" className="py-12 sm:py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,27 +68,20 @@ export const ValuesGuideSection: React.FC<ValuesGuideSectionProps> = ({ onNaviga
             ✨ Educación Emocional y Catequesis Familiar
           </span>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-800">
-            Por qué educar con cuentos ilustrados y guía de valores
+            ¿Por qué educar en valores con cuentos desde Infantil y Primaria?
           </h2>
           <p className="mt-3 text-slate-600 text-sm sm:text-base leading-relaxed">
-            Cada historia escrita por Juancar Hidalgo está pensada como recurso pedagógico para familias, colegios de Educación Infantil y Primaria y grupos de catequesis infantil. Enseñar valores cristianos y humanos —como el perdón, la sinceridad, la acogida y el compartir— resulta mucho más natural cuando los niños se identifican con personajes cercanos y reflexionan luego a través del juego, el diálogo y el dibujo.
+            Cada historia escrita por Juancar Hidalgo está pensada como recurso pedagógico para familias, colegios de Infantil y Primaria y catequesis. Enseñar empatía, respeto, esfuerzo o sinceridad resulta natural cuando los niños se identifican con los personajes y dialogan después en familia.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {VALUES_DATA.map((v) => {
             const Icon = v.icon;
-            const href = `/valores/${v.slug}/`;
             return (
-              <a
+              <Link
                 key={v.title}
-                href={href}
-                onClick={(e) => {
-                  if (onNavigate) {
-                    e.preventDefault();
-                    onNavigate(href);
-                  }
-                }}
+                to={`/valores/${v.slug}`}
                 className="block p-6 rounded-3xl border-2 border-slate-100 bg-amber-50/20 hover:border-amber-300 hover:bg-amber-50/50 transition-all shadow-xs group"
               >
                 <div className="flex items-center gap-3 mb-3">
@@ -105,7 +101,7 @@ export const ValuesGuideSection: React.FC<ValuesGuideSectionProps> = ({ onNaviga
                 <span className="block text-xs font-bold text-amber-800 group-hover:underline">
                   Explorar cuentos de {v.title} →
                 </span>
-              </a>
+              </Link>
             );
           })}
         </div>

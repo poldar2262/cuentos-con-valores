@@ -1,8 +1,8 @@
 import React from 'react';
-import { Sparkles, Headphones, BookOpen, Palette, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Sparkles, Headphones, BookOpen, Palette, GraduationCap } from 'lucide-react';
 import { ValueCategory } from '../types';
-
-import { getValueSlug } from '../data/seoRoutes';
+import { getValueUrl, VALUES_SEO } from '../data/seoRoutes';
 
 interface HeroProps {
   selectedCategory: ValueCategory;
@@ -10,7 +10,6 @@ interface HeroProps {
   categories: ValueCategory[];
   totalStories: number;
   onOpenChatbot?: () => void;
-  onNavigate?: (href: string) => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({
@@ -19,7 +18,6 @@ export const Hero: React.FC<HeroProps> = ({
   categories,
   totalStories,
   onOpenChatbot,
-  onNavigate,
 }) => {
   return (
     <section className="relative overflow-hidden pt-8 pb-12 sm:pt-12 sm:pb-16 bg-gradient-to-b from-amber-100/60 via-amber-50/40 to-transparent">
@@ -29,111 +27,65 @@ export const Hero: React.FC<HeroProps> = ({
       <div className="absolute bottom-4 left-1/3 w-40 h-40 bg-rose-200/30 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="text-center max-w-3xl mx-auto">
-          {/* Top Pill */}
+        <div className="text-center max-w-4xl mx-auto">
+          {/* Top Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-amber-300/80 shadow-xs mb-5">
             <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
             <span className="text-xs sm:text-sm font-bold text-amber-900 tracking-wide">
-              Familias, Colegios y Catequesis • Lectura Gratuita con Valores
+              Cuentos y Valores · Por Juancar Hidalgo · Lectura Gratuita (3 a 12 años)
             </span>
           </div>
 
-          {/* Main Hero Title */}
+          {/* Single Semantic H1 */}
           <h1 className="font-display text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.15]">
-            Cuentos infantiles con valores,{' '}
-            <span className="text-amber-600 underline decoration-wavy decoration-amber-300 decoration-2">
-              ilustraciones y dibujos para colorear
-            </span>
+            Cuentos infantiles con valores para educar en casa y en el colegio
           </h1>
 
-          {/* Intro Description */}
-          <p className="mt-4 sm:mt-6 text-base sm:text-lg text-slate-700 leading-relaxed font-normal">
-            En <strong className="text-slate-900 font-bold">Cuentos y Valores, de{' '}
-            <a
-              href="/sobre-el-autor/"
-              onClick={(e) => {
-                if (onNavigate) {
-                  e.preventDefault();
-                  onNavigate('/sobre-el-autor/');
-                }
-              }}
-              className="font-bold text-amber-800 underline hover:text-amber-950"
-            >
-              Juancar Hidalgo
-            </a></strong>, encontrarás historias alegres y tiernas para inspirar virtudes como la{' '}
-            <strong className="text-slate-900 font-bold">honestidad</strong>, la{' '}
-            <strong className="text-slate-900 font-bold">valentía</strong> y la{' '}
-            <strong className="text-slate-900 font-bold">empatía</strong> en niños de 3 a 12 años. Ideales también como cuentos con valores cristianos y{' '}
-            <a
-              href="/oraciones/"
-              onClick={(e) => {
-                if (onNavigate) {
-                  e.preventDefault();
-                  onNavigate('/oraciones/');
-                }
-              }}
-              className="font-bold text-indigo-800 underline hover:text-indigo-950"
-            >
-              recursos para catequesis
-            </a>
-            , con audiocuento y{' '}
-            <a
-              href="/dibujos-para-colorear/"
-              onClick={(e) => {
-                if (onNavigate) {
-                  e.preventDefault();
-                  onNavigate('/dibujos-para-colorear/');
-                }
-              }}
-              className="font-bold text-sky-800 underline hover:text-sky-950"
-            >
-              láminas para colorear gratis
-            </a>
-            .
+          {/* Direct 48-word GEO Intro Block */}
+          <p className="mt-4 sm:mt-6 text-base sm:text-lg text-slate-700 leading-relaxed font-normal max-w-3xl mx-auto">
+            <strong>Cuentos y Valores</strong> es una biblioteca educativa gratuita de relatos ilustrados con audiocuento, guía de diálogo y láminas para colorear. Dirigida a niños de Educación Infantil y Primaria (3 a 12 años), ayuda a familias y docentes a trabajar virtudes como la empatía, el respeto y la honestidad.
           </p>
 
-          {/* Feature Highlights Pills */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs sm:text-sm font-bold text-slate-700">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white border border-amber-200 shadow-xs">
+          {/* Feature Highlights with real crawlable <a> links */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 text-xs sm:text-sm font-bold text-slate-700">
+            <Link
+              to="/cuentos"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-white border border-amber-200 shadow-xs hover:border-amber-400 transition-colors"
+            >
               <Headphones className="w-4 h-4 text-amber-500" />
-              Audiocuentos Integrados
-            </span>
-            <a
-              href="/dibujos-para-colorear/"
-              onClick={(e) => {
-                if (onNavigate) {
-                  e.preventDefault();
-                  onNavigate('/dibujos-para-colorear/');
-                }
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white border border-sky-200 shadow-xs hover:border-sky-400 transition-colors"
+              <span>Catálogo y Audiocuentos</span>
+            </Link>
+            <Link
+              to="/dibujos-para-colorear"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-white border border-sky-200 shadow-xs hover:border-sky-400 transition-colors"
             >
               <Palette className="w-4 h-4 text-sky-500" />
-              Láminas para Colorear
-            </a>
-            <a
-              href="/belen-recortable/"
-              onClick={(e) => {
-                if (onNavigate) {
-                  e.preventDefault();
-                  onNavigate('/belen-recortable/');
-                }
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-amber-50 border border-amber-300 shadow-xs hover:bg-amber-100 text-amber-950 transition-colors"
+              <span>Láminas para Colorear</span>
+            </Link>
+            <Link
+              to="/guia-padres-docentes"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-white border border-emerald-200 shadow-xs hover:border-emerald-400 transition-colors"
             >
-              <span>✂️ Especial Navidad: Belén Recortable</span>
-            </a>
+              <GraduationCap className="w-4 h-4 text-emerald-600" />
+              <span>Guía Padres y Docentes</span>
+            </Link>
+            <Link
+              to="/belen-recortable"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-amber-50 border border-amber-300 shadow-xs hover:bg-amber-100 text-amber-950 transition-colors"
+            >
+              <span>✂️ Belén Recortable</span>
+            </Link>
           </div>
 
           {/* Primary CTAs */}
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <a
-              href="#cuentos"
+            <Link
+              to="/cuentos"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm sm:text-base shadow-md transition-all transform hover:scale-105 active:scale-95"
             >
               <BookOpen className="w-5 h-5 text-amber-300" />
-              <span>Explorar cuentos por valor</span>
-            </a>
+              <span>Ver catálogo por valor y edad</span>
+            </Link>
 
             {onOpenChatbot && (
               <button
@@ -147,53 +99,48 @@ export const Hero: React.FC<HeroProps> = ({
             )}
           </div>
 
-          {/* Category Filter Chips + Crawlable Links */}
-          <div className="mt-8 pt-6 border-t border-amber-200/60">
-            <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-500 mb-3">
-              <span>Filtrar aquí o abrir página de cada valor:</span>
-              <span className="px-2 py-0.5 rounded-full bg-amber-200/60 text-amber-900 text-[11px]">
-                {totalStories} disponibles
-              </span>
-            </div>
+          {/* Category Filter Chips + Crawlable Value Collection Links */}
+          <div className="mt-10 pt-6 border-t border-amber-200/60">
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+              ¿Cómo elegir un cuento según el valor que quieres trabajar?
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 mb-4">
+              Filtra rápidamente en portada ({totalStories} cuentos disponibles) o entra en la colección completa de cada virtud:
+            </p>
 
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            {/* Quick Interactive Filter */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
               {categories.map((category) => {
                 const isActive = selectedCategory === category;
-                const valHref =
-                  category === 'Todos'
-                    ? '/'
-                    : `/valores/${getValueSlug(category)}/`;
                 return (
-                  <div key={category} className="inline-flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => onSelectCategory(category)}
-                      className={`px-3.5 py-1.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs ${
-                        isActive
-                          ? 'bg-amber-500 text-white scale-105 shadow-md'
-                          : 'bg-white text-slate-700 hover:bg-amber-100/80 border border-amber-200'
-                      }`}
-                    >
-                      {category === 'Todos' ? '🌈 Todos los Cuentos' : `⭐ ${category}`}
-                    </button>
-                    {category !== 'Todos' && (
-                      <a
-                        href={valHref}
-                        onClick={(e) => {
-                          if (onNavigate) {
-                            e.preventDefault();
-                            onNavigate(valHref);
-                          }
-                        }}
-                        className="sr-only"
-                      >
-                        Cuentos sobre {category}
-                      </a>
-                    )}
-                  </div>
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => onSelectCategory(category)}
+                    className={`px-3.5 py-1.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs ${
+                      isActive
+                        ? 'bg-amber-500 text-white scale-105 shadow-md'
+                        : 'bg-white text-slate-700 hover:bg-amber-100/80 border border-amber-200'
+                    }`}
+                  >
+                    {category === 'Todos' ? '🌈 Todos' : category}
+                  </button>
                 );
               })}
             </div>
+
+            {/* Real <a> links to every value collection route */}
+            <nav aria-label="Colecciones por valor" className="flex flex-wrap items-center justify-center gap-2 text-xs">
+              {VALUES_SEO.map((val) => (
+                <Link
+                  key={val.slug}
+                  to={getValueUrl(val.slug)}
+                  className="px-3 py-1 rounded-xl bg-amber-100/60 hover:bg-amber-200 text-amber-900 font-semibold transition-colors"
+                >
+                  Cuentos de {val.title}
+                </Link>
+              ))}
+            </nav>
           </div>
         </div>
       </div>

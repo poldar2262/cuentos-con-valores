@@ -52,7 +52,7 @@ export const PrayersSection: React.FC = () => {
             <span>Rincón de Espiritualidad y Calma</span>
           </div>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
-            Oraciones Dulces para Niños
+            ¿Qué oraciones infantiles ayudan a cultivar la gratitud y la calma?
           </h2>
           <p className="text-slate-600 text-sm sm:text-base mt-2 leading-relaxed">
             Un espacio sereno fuera de los cuentos, con versos sencillos, tiernos y reconfortantes para orar en familia al despertar, en la mesa o antes de dormir.

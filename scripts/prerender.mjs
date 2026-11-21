@@ -107,7 +107,18 @@ async function prerender() {
   for (const route of routes) {
     const appHtml = render(route.path);
     const seo = getRouteSeoMeta(route.path);
-    const pageHtml = injectRouteSeo(template, seo).replace('<!--ssr-outlet-->', appHtml);
+
+    if (seo.title.length > 60) {
+      console.warn(`⚠️ Título > 60 chars (${seo.title.length}) en ${route.path}: "${seo.title}"`);
+    }
+    if (seo.description.length > 155) {
+      console.warn(`⚠️ Descripción > 155 chars (${seo.description.length}) en ${route.path}`);
+    }
+
+    const pageHtml = injectRouteSeo(template, seo).replace(
+      /<!--ssr-start-->[\s\S]*?<!--ssr-end-->/,
+      appHtml
+    );
 
     const outFile =
       route.path === '/'
@@ -116,7 +127,9 @@ async function prerender() {
 
     fs.mkdirSync(path.dirname(outFile), { recursive: true });
     fs.writeFileSync(outFile, pageHtml, 'utf-8');
-    console.log(`✅ Pre-renderizado: ${route.path} -> ${path.relative(rootDir, outFile)} (${(pageHtml.length / 1024).toFixed(1)} KB)`);
+    console.log(
+      `✅ Pre-renderizado: ${route.path} -> ${path.relative(rootDir, outFile)} (${(pageHtml.length / 1024).toFixed(1)} KB)`
+    );
   }
 
   const sitemapEntries = routes

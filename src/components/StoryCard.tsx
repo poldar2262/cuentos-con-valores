@@ -1,35 +1,19 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { BookOpen, Palette, Clock, Users, Heart } from 'lucide-react';
 import { Story } from '../types';
 import { AudioPlayer } from './AudioPlayer';
-
-import { getValueSlug } from '../data/seoRoutes';
+import { getStoryUrl, getValueUrl } from '../data/seoRoutes';
 
 interface StoryCardProps {
   story: Story;
-  onOpenReader: (story: Story) => void;
   onOpenColoring: (story: Story) => void;
-  onNavigate?: (href: string) => void;
 }
 
-export const StoryCard: React.FC<StoryCardProps> = ({
-  story,
-  onOpenReader,
-  onOpenColoring,
-  onNavigate,
-}) => {
-  // Combine page texts for the text-to-speech fallback
+export const StoryCard: React.FC<StoryCardProps> = ({ story, onOpenColoring }) => {
   const fullText = story.pages.map((p) => p.text).join(' ');
-  const storyHref = `/cuentos/${story.id}/`;
-  const valueSlug = story.value === 'Todos' ? 'honestidad' : getValueSlug(story.value);
-  const valueHref = `/valores/${valueSlug}/`;
-
-  const handleLink = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (onNavigate) {
-      e.preventDefault();
-      onNavigate(href);
-    }
-  };
+  const storyHref = getStoryUrl(story.id);
+  const valueHref = getValueUrl(story.value === 'Todos' ? 'honestidad' : story.value);
 
   return (
     <article
@@ -39,32 +23,30 @@ export const StoryCard: React.FC<StoryCardProps> = ({
       <div>
         {/* Story Illustration Header */}
         <div className="relative aspect-4/3 w-full overflow-hidden bg-amber-50">
-          <a
-            href={storyHref}
-            onClick={(e) => handleLink(e, storyHref)}
+          <Link
+            to={storyHref}
             className="block w-full h-full"
             aria-label={`Leer el cuento completo ${story.title}`}
           >
             <img
               src={story.coverImage}
-              alt={`Ilustración infantil del cuento ${story.title} sobre ${story.value}`}
+              alt={`Ilustración infantil sobre la ${story.value.toLowerCase()} en el cuento ${story.title}`}
               width={800}
               height={600}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
             />
-          </a>
+          </Link>
 
           {/* Value Badge Top Left */}
           <div className="absolute top-3.5 left-3.5 flex flex-wrap gap-2">
-            <a
-              href={valueHref}
-              onClick={(e) => handleLink(e, valueHref)}
+            <Link
+              to={valueHref}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-xs border ${story.valueBadgeBg} ${story.valueBadgeColor} ${story.valueBorderColor} hover:opacity-90`}
             >
               <Heart className="w-3.5 h-3.5 fill-current opacity-80" />
               Valor: {story.value}
-            </a>
+            </Link>
           </div>
 
           {/* Age range badge Top Right */}
@@ -96,9 +78,9 @@ export const StoryCard: React.FC<StoryCardProps> = ({
             id={`story-title-${story.id}`}
             className="font-display text-xl sm:text-2xl font-bold text-slate-800 tracking-tight leading-snug group-hover:text-amber-600 transition-colors"
           >
-            <a href={storyHref} onClick={(e) => handleLink(e, storyHref)} className="hover:underline">
+            <Link to={storyHref} className="hover:underline">
               {story.title}
-            </a>
+            </Link>
           </h3>
 
           <p className="mt-2 text-sm text-slate-600 leading-relaxed line-clamp-3">
@@ -107,8 +89,8 @@ export const StoryCard: React.FC<StoryCardProps> = ({
 
           {/* Moral badge snippet */}
           <div className="mt-3.5 p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/50 text-xs text-amber-900 flex items-start gap-2">
-            <span className="text-amber-600 font-bold shrink-0">✨ Virtud:</span>
-            <span className="italic">{story.valueDescription}</span>
+            <span className="text-amber-600 font-bold shrink-0">✨ Moraleja:</span>
+            <span className="italic">{story.moralLesson}</span>
           </div>
 
           {/* Native HTML5 & Narration Audio Player */}
@@ -126,18 +108,15 @@ export const StoryCard: React.FC<StoryCardProps> = ({
 
       {/* Action Buttons Footer */}
       <div className="p-5 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        {/* Button 1: Crawlably linked full story HTML page */}
-        <a
+        <Link
           id={`btn-read-${story.id}`}
-          href={storyHref}
-          onClick={(e) => handleLink(e, storyHref)}
+          to={storyHref}
           className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white font-bold text-sm shadow-xs hover:shadow-md transition-all"
         >
           <BookOpen className="w-4 h-4" />
           <span>Leer Cuento Completo</span>
-        </a>
+        </Link>
 
-        {/* Button 2: Interactive Coloring / Quick Reader */}
         <button
           id={`btn-color-${story.id}`}
           type="button"

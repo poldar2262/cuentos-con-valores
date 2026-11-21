@@ -42,7 +42,7 @@ export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () 
   };
 
   const handleCopyShare = () => {
-    const url = `${window.location.origin}/belen-recortable/`;
+    const url = `${window.location.origin}/belen-recortable`;
     navigator.clipboard.writeText(url).then(() => {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);
@@ -85,7 +85,7 @@ export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () 
           </div>
 
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-display tracking-tight">
-            ⭐ Belén Recortable para Niños
+            ¿Cómo descargar y montar el Belén recortable en casa o en clase?
           </h2>
           <p className="mt-3 text-slate-600 text-sm sm:text-base leading-relaxed">
             Recorta, dobla y pega para que los más pequeños monten su propio pesebre en 3D.
@@ -98,15 +98,17 @@ export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () 
           {/* Left / Center: Interactive Preview & Actions (7 cols) */}
           <div className="lg:col-span-7 flex flex-col gap-4">
             <div className="bg-white rounded-3xl p-4 sm:p-5 border-2 border-amber-200 shadow-md relative group">
-              {/* Image Preview with Zoom Overlay */}
-              <div
+              {/* Image Preview with Accessible Button Trigger */}
+              <button
+                type="button"
                 onClick={() => setIsViewerOpen(true)}
-                className="relative rounded-2xl overflow-hidden bg-slate-100 cursor-pointer aspect-[16/11] border border-amber-100 flex items-center justify-center group-hover:shadow-inner transition-all"
+                className="w-full relative rounded-2xl overflow-hidden bg-slate-100 cursor-pointer aspect-[16/11] border border-amber-100 flex items-center justify-center group-hover:shadow-inner transition-all"
                 title="Haz clic para ver la lámina en grande"
+                aria-label="Ampliar lámina del Belén Recortable para niños"
               >
                 <img
                   src="/assets/belen_recortable.webp"
-                  alt="Lámina completa del Belén Recortable para niños con figuras y portal"
+                  alt="Ilustración infantil del Belén recortable para niños con 16 figuras y portal para imprimir"
                   width={1024}
                   height={571}
                   className="w-full h-full object-contain filter contrast-105 group-hover:scale-102 transition-transform duration-300"
@@ -114,19 +116,19 @@ export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () 
                 />
 
                 {/* Hover overlay hint */}
-                <div className="absolute inset-0 bg-slate-900/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-sm backdrop-blur-2xs">
-                  <div className="px-4 py-2 rounded-xl bg-slate-900/80 shadow-lg flex items-center gap-2">
+                <span className="absolute inset-0 bg-slate-900/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-sm backdrop-blur-2xs">
+                  <span className="px-4 py-2 rounded-xl bg-slate-900/80 shadow-lg flex items-center gap-2">
                     <Eye className="w-4 h-4 text-amber-300" />
                     <span>Ver en grande / pantalla completa</span>
-                  </div>
-                </div>
+                  </span>
+                </span>
 
                 {/* Corner Badge */}
-                <div className="absolute top-3 left-3 bg-amber-500 text-white text-xs font-black px-3 py-1 rounded-full shadow-xs flex items-center gap-1.5">
+                <span className="absolute top-3 left-3 bg-amber-500 text-white text-xs font-black px-3 py-1 rounded-full shadow-xs flex items-center gap-1.5">
                   <Scissors className="w-3.5 h-3.5" />
                   <span>Lámina A4</span>
-                </div>
-              </div>
+                </span>
+              </button>
 
               {/* Action Buttons Bar */}
               <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">

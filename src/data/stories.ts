@@ -19,7 +19,8 @@ export const STORIES: Story[] = [
     coloringPdfUrl: '',
     audioUrl: '/audio/telescopio-honestidad.mp3',
     audioDuration: '4:20 min',
-    moralLesson: 'Un error accidental le puede ocurrir a cualquiera; lo que define nuestro carácter es tener la honestidad y la valentía de reconocerlo de inmediato.',
+    moralLesson: 'Un error accidental le puede ocurrir a cualquiera; lo que define nuestro carácter es reconocerlo con sinceridad de inmediato.',
+    practicalActivity: 'Juego del "Círculo de la Reparación": si algo se rompe o sale mal en casa o clase, practicad en pareja cómo decir primero la verdad en una frase y luego proponer una solución entre todos, terminando con la lámina para colorear de Mateo.',
     discussionQuestions: [
       '¿Por qué sentimos a veces miedo o un "nudo en la barriga" antes de reconocer un fallo accidental?',
       '¿Qué consecuencias tiene guardar silencio frente a decir la verdad desde el primer momento?',
@@ -93,7 +94,8 @@ export const STORIES: Story[] = [
     coloringPdfUrl: '',
     audioUrl: '/audio/mision-amistad.mp3',
     audioDuration: '4:20 min',
-    moralLesson: 'Un buen amigo no solo te acompaña en el juego: te escucha, valora tus ideas y te ayuda a llegar a lugares que jamás habrías alcanzado solo.',
+    moralLesson: 'Un buen amigo te escucha, valora tus ideas y te ayuda a llegar a lugares que jamás habrías alcanzado solo.',
+    practicalActivity: 'Reto cooperativo "Construimos una nave de cartón": con una caja grande o folios reciclados, cread por parejas un vehículo donde cada niño diseñe una parte y ambos decidan juntos el destino antes de colorear la ficha de Leo y Maya.',
     discussionQuestions: [
       '¿Qué objeto ordinario transformaron Leo y Maya con su imaginación y trabajo en equipo?',
       '¿Por qué Maya le dijo a Leo que la nave no podía despegar si faltaba uno de los dos pilotos?',
@@ -172,7 +174,8 @@ export const STORIES: Story[] = [
     coloringPdfUrl: '',
     audioUrl: '/audio/paciencia-estelar.mp3',
     audioDuration: '4:30 min',
-    moralLesson: 'La paciencia no es sentarse a esperar sin más, sino saber guardar la calma con una sonrisa mientras las cosas maravillosas van madurando.',
+    moralLesson: 'La paciencia consiste en guardar la calma con serenidad mientras las cosas valiosas van madurando a su ritmo.',
+    practicalActivity: 'Taller "El frasco de la calma estelar": observad durante dos minutos un reloj de arena o un vaso con purpurina mientras respiráis hondo sin hablar, y comentad al terminar qué detalles visteis que con prisas habrían pasado desapercibidos.',
     discussionQuestions: [
       '¿Por qué Mateo se sentía tan inquieto y miraba el reloj cada cinco minutos?',
       '¿Qué comparación hizo el maestro entre plantar una semilla y esperar la alineación de las estrellas?',
@@ -251,7 +254,8 @@ export const STORIES: Story[] = [
     coloringPdfUrl: '',
     audioUrl: '/audio/mapa-empatia.mp3',
     audioDuration: '4:10 min',
-    moralLesson: 'La empatía nos enseña a mirar con los ojos de los demás, escuchar con el corazón y acompañar a quien lo necesita sin juzgar.',
+    moralLesson: 'La empatía nos enseña a mirar con los ojos del otro, escuchar con el corazón y acompañar sin juzgar.',
+    practicalActivity: 'Dinámica "Nuestro Mapa de los Sentimientos": dibujad en una cartulina cuatro islas (alegría, tristeza, miedo y calma) y colocad cada mañana o al volver del colegio una pinza con vuestro nombre para practicar la escucha activa.',
     discussionQuestions: [
       '¿Por qué Tomás guardó silencio cuando los demás estaban tan emocionados jugando?',
       '¿Cómo se dieron cuenta Sofía y Lucas de que su amigo necesitaba apoyo y comprensión?',
@@ -330,7 +334,8 @@ export const STORIES: Story[] = [
     coloringPdfUrl: '',
     audioUrl: '/audio/corazon-valiente.mp3',
     audioDuration: '4:15 min',
-    moralLesson: 'El valor no consiste en no tener miedo, sino en hacer lo correcto y vencer nuestros propios temores para ayudar a otro.',
+    moralLesson: 'El valor no es ausencia de miedo, sino dar un paso adelante para hacer lo correcto y ayudar a quien lo necesita.',
+    practicalActivity: 'Mural "Mi Escudo de Pequeños Valientes": cada niño dibuja la lámina del Cristal de los Ecos y escribe detrás un miedo pequeño que ya superó (dormir sin luz, hablar en clase o pedir disculpas) para celebrar su avance.',
     discussionQuestions: [
       '¿Por qué Valerio pensaba que nunca pondrían su nombre en el Muro de los Héroes?',
       '¿Qué significan las palabras que le dijo Elara en el puente: "El miedo es solo una nube y tú eres el sol"?',
@@ -409,7 +414,8 @@ export const STORIES: Story[] = [
     coloringPdfUrl: '',
     audioUrl: '/audio/luz-nazaret.mp3',
     audioDuration: '5:30 min',
-    moralLesson: 'Todos podemos ser luz para los demás a través de nuestras pequeñas y grandes acciones de amor y generosidad.',
+    moralLesson: 'Todos podemos ser luz para los demás mediante pequeños y grandes gestos diarios de amor y generosidad.',
+    practicalActivity: 'Actividad "La Cesta de los Cinco Panes": recortad cinco corazones de papel y anotad en cada uno un gesto sencillo para compartir en casa o en clase durante la semana (ayudar a recoger, consolar a un amigo o compartir la merienda).',
     discussionQuestions: [
       '¿Qué regalo trajo el niño pequeño que no dudó en compartir con todos?',
       '¿Por qué decía Jesús que lo más valioso no es lo que tienes, sino lo que das?',
@@ -538,7 +544,8 @@ export const STORIES: Story[] = [
     coloringPdfUrl: '',
     audioUrl: '/audio/mision-generosidad.mp3',
     audioDuration: '4:15 min',
-    moralLesson: 'Ser generoso es tener un corazón ancho donde siempre quepa un amigo más. Cuando compartes tus juegos y tu alegría, la diversión se multiplica hasta el infinito.',
+    moralLesson: 'Ser generoso es abrir un sitio más en tu juego para que nadie se quede mirando solo desde fuera.',
+    practicalActivity: 'Misión de recreo "Nadie en la valla": durante tres días, cada participante observa quién está solo al empezar el patio o el parque, lo invita a sumarse al juego y lo celebra coloreando juntos la lámina de la flota espacial.',
     discussionQuestions: [
       '¿Cómo se sentía Oliver mirando a Leo y Maya jugar desde la valla del jardín?',
       '¿Qué hicieron Leo y Maya cuando se dieron cuenta de que Oliver estaba solo?',

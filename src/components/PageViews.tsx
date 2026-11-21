@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
   BookOpen,
+  CheckCircle2,
   ChevronRight,
   Clock,
   Download,
   ExternalLink,
+  GraduationCap,
   Heart,
   HelpCircle,
   Home,
+  Mail,
   MessageCircle,
   Palette,
   Scissors,
@@ -21,7 +25,9 @@ import { Story } from '../types';
 import {
   VALUES_SEO,
   ValueSeoInfo,
+  getStoryUrl,
   getValueSlug,
+  getValueUrl,
 } from '../data/seoRoutes';
 import { AudioPlayer } from './AudioPlayer';
 import { StoryCard } from './StoryCard';
@@ -29,41 +35,27 @@ import { DownloadsSection } from './DownloadsSection';
 import { BelenRecortableSection } from './BelenRecortableSection';
 import { PrayersSection } from './PrayersSection';
 
-export type NavigateHandler = (href: string) => void;
-
 interface BreadcrumbProps {
-  items: { label: string; href?: string }[];
-  onNavigate: NavigateHandler;
+  items: { label: string; to?: string }[];
 }
 
-const Breadcrumbs: React.FC<BreadcrumbProps> = ({ items, onNavigate }) => {
+const Breadcrumbs: React.FC<BreadcrumbProps> = ({ items }) => {
   return (
-    <nav aria-label="Ruta de navegación" className="mb-6 flex flex-wrap items-center gap-1.5 text-xs sm:text-sm text-slate-600 font-semibold">
-      <a
-        href="/"
-        onClick={(e) => {
-          e.preventDefault();
-          onNavigate('/');
-        }}
-        className="inline-flex items-center gap-1 hover:text-amber-700 transition-colors"
-      >
+    <nav
+      aria-label="Ruta de navegación"
+      className="mb-6 flex flex-wrap items-center gap-1.5 text-xs sm:text-sm text-slate-600 font-semibold"
+    >
+      <Link to="/" className="inline-flex items-center gap-1 hover:text-amber-700 transition-colors">
         <Home className="w-3.5 h-3.5 text-amber-600" />
         <span>Inicio</span>
-      </a>
+      </Link>
       {items.map((item, idx) => (
         <React.Fragment key={`${item.label}-${idx}`}>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          {item.href ? (
-            <a
-              href={item.href}
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate(item.href!);
-              }}
-              className="hover:text-amber-700 transition-colors"
-            >
+          {item.to ? (
+            <Link to={item.to} className="hover:text-amber-700 transition-colors">
               {item.label}
-            </a>
+            </Link>
           ) : (
             <span className="text-slate-900 font-bold">{item.label}</span>
           )}
@@ -73,10 +65,12 @@ const Breadcrumbs: React.FC<BreadcrumbProps> = ({ items, onNavigate }) => {
   );
 };
 
+/* ============================================================
+   1. FICHA INDIVIDUAL DE CUENTO (/cuento/:slugCuento)
+   ============================================================ */
 interface StoryDetailPageProps {
   story: Story;
   allStories: Story[];
-  onNavigate: NavigateHandler;
   onOpenReaderModal: (story: Story) => void;
   onOpenColoring: (story: Story) => void;
 }
@@ -84,24 +78,24 @@ interface StoryDetailPageProps {
 export const StoryDetailPage: React.FC<StoryDetailPageProps> = ({
   story,
   allStories,
-  onNavigate,
   onOpenReaderModal,
   onOpenColoring,
 }) => {
   const fullText = story.pages.map((p) => p.text).join(' ');
-  const valueSlug =
-    story.value === 'Todos' ? 'honestidad' : getValueSlug(story.value);
-  const relatedStories = allStories
-    .filter((s) => s.id !== story.id)
-    .slice(0, 3);
+  const valueSlug = getValueSlug(story.value === 'Todos' ? 'Honestidad' : story.value);
+  const relatedStories = allStories.filter((s) => s.id !== story.id).slice(0, 3);
+  const reflectionQuestions = story.discussionQuestions.slice(0, 3);
+  const practicalActivityText =
+    story.practicalActivity ||
+    `Después de leer "${story.title}", comentad una situación real de esta semana donde practicar la ${story.value.toLowerCase()} y completad juntos la lámina para colorear de ${story.coloringSheet.characterName}.`;
 
   const handleDownloadTxt = () => {
     try {
-      const header = `CUENTO INFANTIL CON VALORES: ${story.title.toUpperCase()}\nValor: ${story.value} | Edad recomendada: ${story.ageRange}\nAutor: ${story.author || 'Juancar Hidalgo'}\n${'='.repeat(60)}\n\n`;
+      const header = `CUENTO INFANTIL CON VALORES: ${story.title.toUpperCase()}\nValor principal: ${story.value} | Edad recomendada: ${story.ageRange} | Tiempo de lectura: ${story.readingTime}\nAutor: ${story.author || 'Juancar Hidalgo'}\n${'='.repeat(60)}\n\n`;
       const body = story.pages
-        .map((p) => `Página ${p.pageNumber}:\n${p.text}\n`)
+        .map((p) => `Escena ${p.pageNumber}:\n${p.text}\n`)
         .join('\n');
-      const moral = `\n${'='.repeat(60)}\nMORALEJA:\n${story.moralLesson}\n\nPREGUNTAS PARA REFLEXIONAR EN FAMILIA O EN CLASE:\n${story.discussionQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}\n\nFuente: https://www.cuentosyvalores.es/cuentos/${story.id}/\n`;
+      const moral = `\n${'='.repeat(60)}\nMORALEJA EN UNA FRASE:\n${story.moralLesson}\n\nPREGUNTAS PARA REFLEXIONAR DESPUÉS DE LEER:\n${reflectionQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}\n\nACTIVIDAD PRÁCTICA PARA CASA O EL AULA:\n${practicalActivityText}\n\nFuente: https://cuentosyvalores.es${getStoryUrl(story.id)}\n`;
       const blob = new Blob([header + body + moral], {
         type: 'text/plain;charset=utf-8',
       });
@@ -122,19 +116,21 @@ export const StoryDetailPage: React.FC<StoryDetailPageProps> = ({
     <div className="py-8 sm:py-12 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       <Breadcrumbs
         items={[
-          { label: story.value, href: `/valores/${valueSlug}/` },
+          { label: 'Cuentos', to: '/cuentos' },
+          { label: story.value, to: `/valores/${valueSlug}` },
           { label: story.title },
         ]}
-        onNavigate={onNavigate}
       />
 
-      {/* Hero Header Card */}
       <article className="bg-white rounded-3xl border-2 border-amber-200/80 shadow-md overflow-hidden">
+        {/* Top Story Header */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-0">
           <div className="md:col-span-5 bg-amber-50/70 relative aspect-[4/3] md:aspect-auto">
             <img
               src={story.coverImage}
-              alt={`Ilustración infantil del cuento ${story.title} sobre ${story.value}`}
+              alt={`Ilustración infantil sobre la ${story.value.toLowerCase()} en el cuento ${story.title}`}
+              width={800}
+              height={600}
               className="w-full h-full object-cover"
             />
           </div>
@@ -142,17 +138,13 @@ export const StoryDetailPage: React.FC<StoryDetailPageProps> = ({
           <div className="md:col-span-7 p-6 sm:p-8 flex flex-col justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-3">
-                <a
-                  href={`/valores/${valueSlug}/`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate(`/valores/${valueSlug}/`);
-                  }}
+                <Link
+                  to={`/valores/${valueSlug}`}
                   className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${story.valueBadgeBg} ${story.valueBadgeColor} ${story.valueBorderColor}`}
                 >
                   <Heart className="w-3.5 h-3.5 fill-current opacity-80" />
                   Valor: {story.value}
-                </a>
+                </Link>
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
                   <Users className="w-3.5 h-3.5 text-amber-500" />
                   {story.ageRange}
@@ -164,26 +156,54 @@ export const StoryDetailPage: React.FC<StoryDetailPageProps> = ({
               </div>
 
               <h1 className="font-display text-2xl sm:text-4xl font-black text-slate-900 leading-tight">
-                {story.title}
+                {story.title}: cuento infantil sobre la {story.value}
               </h1>
 
               <p className="mt-2 text-xs sm:text-sm font-semibold text-amber-700">
                 Por{' '}
-                <a
-                  href="/sobre-el-autor/"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate('/sobre-el-autor/');
-                  }}
-                  className="underline hover:text-amber-900"
-                >
+                <Link to="/sobre-nosotros" className="underline hover:text-amber-900">
                   {story.author || 'Juancar Hidalgo'}
-                </a>
+                </Link>
               </p>
 
               <p className="mt-3 text-sm sm:text-base text-slate-700 leading-relaxed">
                 {story.summary}
               </p>
+
+              {/* Ficha resumen inicial estructurada en HTML (<dl>) para extracción GEO e IA */}
+              <aside
+                aria-label="Ficha pedagógica del cuento"
+                className="mt-5 p-4 rounded-2xl bg-amber-50/80 border border-amber-200"
+              >
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                  <div>
+                    <dt className="font-bold text-amber-900 uppercase tracking-wide text-[11px]">
+                      Valor principal
+                    </dt>
+                    <dd className="font-semibold text-slate-900">{story.value}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-bold text-amber-900 uppercase tracking-wide text-[11px]">
+                      Edad recomendada
+                    </dt>
+                    <dd className="font-semibold text-slate-900">{story.ageRange}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-bold text-amber-900 uppercase tracking-wide text-[11px]">
+                      Tiempo de lectura
+                    </dt>
+                    <dd className="font-semibold text-slate-900">{story.readingTime}</dd>
+                  </div>
+                  <div className="sm:col-span-2 pt-1 border-t border-amber-200/70">
+                    <dt className="font-bold text-amber-900 uppercase tracking-wide text-[11px]">
+                      Moraleja en una frase
+                    </dt>
+                    <dd className="font-medium text-slate-800 italic mt-0.5">
+                      «{story.moralLesson}»
+                    </dd>
+                  </div>
+                </dl>
+              </aside>
             </div>
 
             <div className="mt-6 space-y-4">
@@ -236,59 +256,64 @@ export const StoryDetailPage: React.FC<StoryDetailPageProps> = ({
           </div>
         </div>
 
-        {/* Full Story Text Body in HTML */}
-        <section aria-label="Texto completo del cuento" className="p-6 sm:p-10 border-t border-amber-100 bg-amber-50/20">
+        {/* Full Story Body with semantic headings */}
+        <section
+          aria-label="Texto completo del cuento"
+          className="p-6 sm:p-10 border-t border-amber-100 bg-amber-50/20"
+        >
           <div className="max-w-3xl mx-auto">
-            <div className="flex items-center gap-2 mb-6">
-              <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-900 font-bold text-xs">
-                📖 Lectura Completa Online ({story.pages.length} escenas)
-              </span>
-            </div>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-6">
+              Lectura completa del cuento ({story.pages.length} escenas)
+            </h2>
 
             <div className="space-y-6">
               {story.pages.map((page) => (
-                <div
+                <section
                   key={page.pageNumber}
                   className="bg-white rounded-2xl p-5 sm:p-6 border border-amber-200/70 shadow-2xs"
                 >
-                  <div className="flex items-center justify-between gap-2 mb-2.5">
-                    <span className="text-xs font-black uppercase tracking-wider text-amber-600">
-                      Capítulo / Escena {page.pageNumber}
-                    </span>
-                  </div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-amber-700 mb-2">
+                    Escena {page.pageNumber}
+                  </h3>
                   <p className="text-base sm:text-lg text-slate-800 leading-relaxed font-serif">
                     {page.text}
                   </p>
                   <p className="mt-3 text-xs text-slate-500 italic border-t border-slate-100 pt-2">
-                    Escena ilustrada: {page.illustrationDescription}
+                    Ilustración: {page.illustrationDescription}
                   </p>
-                </div>
+                </section>
               ))}
             </div>
 
-            {/* Moral Lesson & Discussion Questions */}
+            {/* Obligatory GEO Closing Blocks: 3 Open Reflection Questions + Practical Activity */}
             <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-6 rounded-3xl bg-amber-100/70 border-2 border-amber-300">
-                <h2 className="font-display text-xl font-bold text-amber-950 flex items-center gap-2 mb-2">
-                  <Sparkles className="w-5 h-5 text-amber-700" />
-                  <span>Moraleja y Enseñanza</span>
-                </h2>
-                <p className="text-sm sm:text-base text-amber-950/90 leading-relaxed">
-                  {story.moralLesson}
-                </p>
-              </div>
-
-              <div className="p-6 rounded-3xl bg-sky-50 border-2 border-sky-200">
+              <section className="p-6 rounded-3xl bg-sky-50 border-2 border-sky-200">
                 <h2 className="font-display text-xl font-bold text-sky-950 flex items-center gap-2 mb-3">
-                  <MessageCircle className="w-5 h-5 text-sky-600" />
-                  <span>Preguntas para Reflexionar</span>
+                  <MessageCircle className="w-5 h-5 text-sky-600 shrink-0" />
+                  <span>Preguntas para reflexionar después de leer</span>
                 </h2>
-                <ol className="space-y-2 list-decimal list-inside text-sm text-slate-700 leading-relaxed">
-                  {story.discussionQuestions.map((q, idx) => (
+                <ol className="space-y-2.5 list-decimal list-inside text-sm text-slate-700 leading-relaxed">
+                  {reflectionQuestions.map((q, idx) => (
                     <li key={idx}>{q}</li>
                   ))}
                 </ol>
-              </div>
+              </section>
+
+              <section className="p-6 rounded-3xl bg-emerald-50 border-2 border-emerald-200">
+                <h2 className="font-display text-xl font-bold text-emerald-950 flex items-center gap-2 mb-3">
+                  <GraduationCap className="w-5 h-5 text-emerald-700 shrink-0" />
+                  <span>Actividad práctica para casa o el aula</span>
+                </h2>
+                <p className="text-sm text-slate-700 leading-relaxed mb-4">
+                  {practicalActivityText}
+                </p>
+                <Link
+                  to="/guia-padres-docentes"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 hover:underline"
+                >
+                  <span>Ver más dinámicas en la Guía para Padres y Docentes →</span>
+                </Link>
+              </section>
             </div>
 
             {/* Coloring Sheet Preview CTA */}
@@ -296,7 +321,10 @@ export const StoryDetailPage: React.FC<StoryDetailPageProps> = ({
               <div className="mt-10 p-6 rounded-3xl bg-white border-2 border-sky-200 shadow-xs flex flex-col sm:flex-row items-center gap-6">
                 <img
                   src={story.coloringSheet.lineartImage}
-                  alt={`Dibujo para colorear de ${story.coloringSheet.title}`}
+                  alt={`Ilustración infantil para colorear sobre la ${story.value.toLowerCase()} del cuento ${story.title}`}
+                  width={400}
+                  height={535}
+                  loading="lazy"
                   className="w-40 h-40 object-contain rounded-2xl border border-slate-200 bg-white shrink-0"
                 />
                 <div className="space-y-3 text-center sm:text-left">
@@ -304,7 +332,7 @@ export const StoryDetailPage: React.FC<StoryDetailPageProps> = ({
                     Lámina para Colorear: {story.coloringSheet.title}
                   </h2>
                   <p className="text-sm text-slate-600 leading-relaxed">
-                    Completa la lectura con la actividad plástica de {story.coloringSheet.characterName}. Puedes pintarla directamente en el navegador o descargarla gratis para imprimir en formato A4.
+                    Completa la lectura con la actividad plástica de {story.coloringSheet.characterName}. Puedes pintarla online o descargarla gratis en formato A4.
                   </p>
                   <button
                     type="button"
@@ -325,29 +353,19 @@ export const StoryDetailPage: React.FC<StoryDetailPageProps> = ({
       <section className="mt-12">
         <div className="flex items-center justify-between gap-4 mb-6">
           <h2 className="font-display text-2xl font-bold text-slate-900">
-            Otros cuentos con valores que te pueden gustar
+            Otros cuentos con valores recomendados
           </h2>
-          <a
-            href="/"
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigate('/');
-            }}
+          <Link
+            to="/cuentos"
             className="text-sm font-bold text-amber-700 hover:text-amber-900 inline-flex items-center gap-1"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Ver catálogo completo</span>
-          </a>
+          </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {relatedStories.map((rel) => (
-            <StoryCard
-              key={rel.id}
-              story={rel}
-              onOpenReader={onOpenReaderModal}
-              onOpenColoring={onOpenColoring}
-              onNavigate={onNavigate}
-            />
+            <StoryCard key={rel.id} story={rel} onOpenColoring={onOpenColoring} />
           ))}
         </div>
       </section>
@@ -355,29 +373,175 @@ export const StoryDetailPage: React.FC<StoryDetailPageProps> = ({
   );
 };
 
+/* ============================================================
+   2. CATÁLOGO COMPLETO CON FILTROS POR VALOR Y EDAD (/cuentos)
+   ============================================================ */
+export const CatalogPage: React.FC<{
+  stories: Story[];
+  onOpenColoring: (story: Story) => void;
+}> = ({ stories, onOpenColoring }) => {
+  const [selectedValue, setSelectedValue] = useState<string>('Todos');
+  const [selectedAge, setSelectedAge] = useState<'todas' | '3-5' | '6-8' | '9-12'>('todas');
+
+  const valueOptions = ['Todos', 'Honestidad', 'Valentía', 'Empatía', 'Generosidad', 'Paciencia', 'Amistad'];
+
+  const matchesAge = (ageRange: string, bucket: 'todas' | '3-5' | '6-8' | '9-12'): boolean => {
+    if (bucket === 'todas') return true;
+    const nums = ageRange.match(/\d+/g)?.map(Number) || [4, 10];
+    const min = nums[0] ?? 4;
+    const max = nums[1] ?? min;
+    if (bucket === '3-5') return min <= 5;
+    if (bucket === '6-8') return min <= 8 && max >= 6;
+    return max >= 9;
+  };
+
+  const filtered = useMemo(() => {
+    return stories.filter((s) => {
+      const okValue = selectedValue === 'Todos' || s.value.toLowerCase() === selectedValue.toLowerCase();
+      const okAge = matchesAge(s.ageRange, selectedAge);
+      return okValue && okAge;
+    });
+  }, [stories, selectedValue, selectedAge]);
+
+  return (
+    <div className="py-8 sm:py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Breadcrumbs items={[{ label: 'Catálogo de Cuentos' }]} />
+
+      <header className="bg-white rounded-3xl p-6 sm:p-10 border-2 border-amber-200 shadow-sm mb-8">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold mb-3">
+          <BookOpen className="w-3.5 h-3.5" />
+          <span>Biblioteca Infantil Gratuita · 3 a 12 años</span>
+        </span>
+        <h1 className="font-display text-3xl sm:text-5xl font-black text-slate-900 leading-tight">
+          Catálogo completo de cuentos infantiles con valores
+        </h1>
+        <p className="mt-3 text-sm sm:text-base text-slate-600 max-w-3xl leading-relaxed">
+          Filtra nuestros relatos ilustrados según la virtud que deseas trabajar o la franja de edad de Educación Infantil y Primaria. Cada ficha incluye texto completo HTML, audio narrado, tres preguntas de reflexión y actividad práctica.
+        </p>
+
+        {/* Value & Age Interactive Filters */}
+        <div className="mt-6 pt-6 border-t border-amber-100 space-y-4">
+          <div>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              Filtrar por valor:
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {valueOptions.map((val) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setSelectedValue(val)}
+                  className={`px-3.5 py-1.5 rounded-2xl text-xs sm:text-sm font-bold cursor-pointer transition-colors ${
+                    selectedValue === val
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'bg-amber-50 text-slate-700 hover:bg-amber-100 border border-amber-200'
+                  }`}
+                >
+                  {val}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              Filtrar por edad recomendada:
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: 'todas', label: 'Todas las edades (3-12 años)' },
+                { id: '3-5', label: 'Infantil (3-5 años)' },
+                { id: '6-8', label: 'Primeros lectores (6-8 años)' },
+                { id: '9-12', label: 'Primaria (9-12 años)' },
+              ].map((age) => (
+                <button
+                  key={age.id}
+                  type="button"
+                  onClick={() => setSelectedAge(age.id as typeof selectedAge)}
+                  className={`px-3.5 py-1.5 rounded-2xl text-xs sm:text-sm font-bold cursor-pointer transition-colors ${
+                    selectedAge === age.id
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  {age.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section aria-label="Listado de cuentos filtrados">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-display text-2xl font-bold text-slate-900">
+            Cuentos disponibles ({filtered.length})
+          </h2>
+          {(selectedValue !== 'Todos' || selectedAge !== 'todas') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedValue('Todos');
+                setSelectedAge('todas');
+              }}
+              className="text-xs font-bold text-amber-700 underline cursor-pointer"
+            >
+              Limpiar filtros
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+          {filtered.map((story) => (
+            <StoryCard key={story.id} story={story} onOpenColoring={onOpenColoring} />
+          ))}
+        </div>
+      </section>
+
+      {/* Crawlable Links to All Value Pages */}
+      <section className="mt-12 bg-white rounded-3xl p-6 sm:p-8 border border-amber-200/80">
+        <h2 className="font-display text-xl font-bold text-slate-900 mb-4">
+          ¿Qué colección temática por valores quieres explorar?
+        </h2>
+        <div className="flex flex-wrap gap-2.5">
+          {VALUES_SEO.map((val) => (
+            <Link
+              key={val.slug}
+              to={getValueUrl(val.slug)}
+              className="px-4 py-2 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-950 font-bold text-xs sm:text-sm transition-colors"
+            >
+              Cuentos de {val.title}
+            </Link>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+/* ============================================================
+   3. PÁGINA POR VALOR (/valores/:slugValor)
+   ============================================================ */
 interface ValueLandingPageProps {
   valueInfo: ValueSeoInfo;
   matchingStories: Story[];
-  onNavigate: NavigateHandler;
-  onOpenReaderModal: (story: Story) => void;
   onOpenColoring: (story: Story) => void;
 }
 
 export const ValueLandingPage: React.FC<ValueLandingPageProps> = ({
   valueInfo,
   matchingStories,
-  onNavigate,
-  onOpenReaderModal,
   onOpenColoring,
 }) => {
   return (
     <div className="py-8 sm:py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <Breadcrumbs
-        items={[{ label: `Valor: ${valueInfo.title}` }]}
-        onNavigate={onNavigate}
+        items={[
+          { label: 'Cuentos', to: '/cuentos' },
+          { label: `Valor: ${valueInfo.title}` },
+        ]}
       />
 
-      {/* Editorial Header */}
       <header className="bg-white rounded-3xl p-6 sm:p-10 border-2 border-amber-200/80 shadow-sm mb-10">
         <span
           className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold border mb-4 ${valueInfo.badgeBg} ${valueInfo.badgeColor}`}
@@ -392,7 +556,6 @@ export const ValueLandingPage: React.FC<ValueLandingPageProps> = ({
           {valueInfo.subtitle}
         </p>
 
-        {/* Rich 200+ word SEO Article */}
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 border-t border-amber-100">
           <div className="lg:col-span-8 space-y-4 text-sm sm:text-base text-slate-700 leading-relaxed">
             {valueInfo.introParagraphs.map((p, idx) => (
@@ -416,42 +579,30 @@ export const ValueLandingPage: React.FC<ValueLandingPageProps> = ({
         </div>
       </header>
 
-      {/* Filtered Stories */}
       <section className="mb-12">
         <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-6">
           Cuentos e ilustraciones sobre {valueInfo.title} ({matchingStories.length})
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
           {matchingStories.map((story) => (
-            <StoryCard
-              key={story.id}
-              story={story}
-              onOpenReader={onOpenReaderModal}
-              onOpenColoring={onOpenColoring}
-              onNavigate={onNavigate}
-            />
+            <StoryCard key={story.id} story={story} onOpenColoring={onOpenColoring} />
           ))}
         </div>
       </section>
 
-      {/* Other Values Cross Links */}
       <section className="bg-white rounded-3xl p-6 sm:p-8 border border-amber-200/80">
         <h2 className="font-display text-xl font-bold text-slate-900 mb-4">
           Explora otros valores esenciales para niños
         </h2>
         <div className="flex flex-wrap gap-2.5">
           {VALUES_SEO.filter((v) => v.slug !== valueInfo.slug).map((v) => (
-            <a
+            <Link
               key={v.slug}
-              href={`/valores/${v.slug}/`}
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate(`/valores/${v.slug}/`);
-              }}
+              to={`/valores/${v.slug}`}
               className="px-4 py-2 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-950 font-bold text-xs sm:text-sm transition-colors"
             >
-              ⭐ Cuentos de {v.title}
-            </a>
+              Cuentos de {v.title}
+            </Link>
           ))}
         </div>
       </section>
@@ -459,19 +610,190 @@ export const ValueLandingPage: React.FC<ValueLandingPageProps> = ({
   );
 };
 
-export const BelenRecortablePage: React.FC<{
-  onNavigate: NavigateHandler;
-  allStories: Story[];
-}> = ({ onNavigate, allStories }) => {
+/* ============================================================
+   4. GUÍA PRÁCTICA PARA PADRES Y DOCENTES (/guia-padres-docentes)
+   ============================================================ */
+export const ParentsTeachersGuidePage: React.FC = () => {
+  return (
+    <div className="py-8 sm:py-12 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Breadcrumbs items={[{ label: 'Guía para Padres y Docentes' }]} />
+
+      <article className="bg-white rounded-3xl p-6 sm:p-10 border-2 border-emerald-200 shadow-sm space-y-8">
+        <header className="border-b border-emerald-100 pb-6">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-bold mb-3">
+            <GraduationCap className="w-3.5 h-3.5" />
+            <span>Metodología Didáctica · Infantil, Primaria y Familia</span>
+          </span>
+          <h1 className="font-display text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
+            Guía práctica para trabajar cuentos con valores en casa y en el aula
+          </h1>
+          <p className="mt-3 text-slate-600 text-base leading-relaxed">
+            Cómo transformar un relato ilustrado de 5 minutos en una conversación significativa y una experiencia memorable para niños de 3 a 12 años.
+          </p>
+        </header>
+
+        <section className="space-y-4">
+          <h2 className="font-display text-2xl font-bold text-slate-900">
+            ¿Cómo estructurar una sesión de cuento con valores en 3 pasos?
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-5 rounded-2xl bg-amber-50/70 border border-amber-200">
+              <span className="text-xs font-black text-amber-700 uppercase">Paso 1 · Lectura o Audio</span>
+              <h3 className="font-bold text-slate-900 text-lg mt-1 mb-2">Escucha atenta</h3>
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                Lee en voz alta haciendo pausas en las escenas ilustradas o reproduce el audiocuento integrado antes de dormir o en la asamblea del aula.
+              </p>
+            </div>
+            <div className="p-5 rounded-2xl bg-sky-50/70 border border-sky-200">
+              <span className="text-xs font-black text-sky-700 uppercase">Paso 2 · Diálogo Abierto</span>
+              <h3 className="font-bold text-slate-900 text-lg mt-1 mb-2">Preguntas sin juzgar</h3>
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                Utiliza las tres preguntas finales de cada cuento. Pregunta cómo se sintió el personaje en lugar de dar un sermón moral directo.
+              </p>
+            </div>
+            <div className="p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200">
+              <span className="text-xs font-black text-emerald-700 uppercase">Paso 3 · Acción Plástica</span>
+              <h3 className="font-bold text-slate-900 text-lg mt-1 mb-2">Lámina y reto</h3>
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                Cierra con la actividad práctica propuesta y la lámina para colorear para fijar el aprendizaje mediante el juego y la creatividad.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="font-display text-2xl font-bold text-slate-900">
+            ¿Qué trabajar según cada etapa de edad?
+          </h2>
+          <div className="space-y-3 text-sm text-slate-700 leading-relaxed">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <strong className="text-slate-900 block mb-1">Educación Infantil (3 a 5 años):</strong>
+              Prioriza historias visuales con un conflicto sencillo sobre compartir o esperar turnos como{' '}
+              <Link to="/cuento/una-mision-para-dos" className="text-amber-700 font-bold underline">
+                Una Misión para Dos
+              </Link>{' '}
+              o{' '}
+              <Link to="/cuento/una-mision-para-todos" className="text-amber-700 font-bold underline">
+                Una Misión para Todos
+              </Link>.
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <strong className="text-slate-900 block mb-1">Primeros Lectores (6 a 8 años):</strong>
+              Ideal para nombrar emociones en el patio escolar y manejar los nervios con{' '}
+              <Link to="/cuento/el-mapa-de-los-sentimientos" className="text-amber-700 font-bold underline">
+                El Mapa de los Sentimientos
+              </Link>{' '}
+              y{' '}
+              <Link to="/cuento/mateo-y-el-secreto-de-la-paciencia-estelar" className="text-amber-700 font-bold underline">
+                Mateo y el Secreto de la Paciencia Estelar
+              </Link>.
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <strong className="text-slate-900 block mb-1">Primaria y Catequesis (9 a 12 años):</strong>
+              Fomenta el debate sobre la reparación de errores, el coraje moral y la solidaridad con{' '}
+              <Link to="/cuento/mateo-y-el-misterio-del-telescopio-roto" className="text-amber-700 font-bold underline">
+                Mateo y el Misterio del Telescopio Roto
+              </Link>{' '}
+              y{' '}
+              <Link to="/cuento/el-destello-del-corazon-valiente" className="text-amber-700 font-bold underline">
+                El Destello del Corazón Valiente
+              </Link>.
+            </div>
+          </div>
+        </section>
+
+        <footer className="pt-6 border-t border-emerald-100 flex flex-wrap gap-3 items-center justify-between">
+          <Link
+            to="/cuentos"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-colors"
+          >
+            <BookOpen className="w-4 h-4" />
+            <span>Explorar catálogo por edad y valor</span>
+          </Link>
+          <Link to="/" className="text-sm font-bold text-amber-800 hover:underline">
+            ← Volver a la página principal
+          </Link>
+        </footer>
+      </article>
+    </div>
+  );
+};
+
+/* ============================================================
+   5. BLOQUE E-E-A-T EN PORTADA ("Sobre el proyecto / Enfoque pedagógico")
+   ============================================================ */
+export const HomePedagogicalSection: React.FC<{ onOpenContact: () => void }> = ({
+  onOpenContact,
+}) => {
+  return (
+    <section
+      id="enfoque-pedagogico"
+      className="py-12 sm:py-16 bg-white border-t border-amber-100"
+    >
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-amber-50/50 rounded-3xl p-6 sm:p-10 border-2 border-amber-200/80">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold mb-3">
+            <UserCheck className="w-3.5 h-3.5" />
+            <span>Autoría, Transparencia y Criterio Educativo</span>
+          </span>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-3">
+            ¿Cuál es nuestro enfoque pedagógico y quién crea Cuentos y Valores?
+          </h2>
+          <p className="text-sm sm:text-base text-slate-700 leading-relaxed mb-5">
+            <strong>Cuentos y Valores</strong> es una iniciativa cultural y educativa creada por{' '}
+            <strong>Juancar Hidalgo</strong>. Cada historia combina lectura cercana sin sermones, audio narrado, tres preguntas abiertas de reflexión y una actividad plástica para que padres, maestros y catequistas eduquen virtudes esenciales de forma gratuita y segura.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 text-xs sm:text-sm">
+            <div className="bg-white p-4 rounded-2xl border border-amber-200/70 flex items-start gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span>Relatos revisados por etapas educativas de 3 a 12 años y libres de violencia.</span>
+            </div>
+            <div className="bg-white p-4 rounded-2xl border border-amber-200/70 flex items-start gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span>Acceso 100% libre para imprimir en hogares, colegios y parroquias sin registro.</span>
+            </div>
+            <div className="bg-white p-4 rounded-2xl border border-amber-200/70 flex items-start gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span>Contacto editorial directo para sugerencias de familias y profesorado.</span>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to="/sobre-nosotros"
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm transition-colors"
+            >
+              Conocer el proyecto y enfoque pedagógico
+            </Link>
+            <Link
+              to="/guia-padres-docentes"
+              className="px-4 py-2 rounded-xl bg-white hover:bg-amber-100 border border-amber-300 text-amber-900 font-bold text-xs sm:text-sm transition-colors"
+            >
+              Leer Guía para Padres y Docentes
+            </Link>
+            <button
+              type="button"
+              onClick={onOpenContact}
+              className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer"
+            >
+              Contactar con el autor
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ============================================================
+   6. BELÉN RECORTABLE, COLOREAR, ORACIONES, SOBRE NOSOTROS, LEGAL
+   ============================================================ */
+export const BelenRecortablePage: React.FC<{ allStories: Story[] }> = ({ allStories }) => {
   const luzStory = allStories.find((s) => s.id === 'la-luz-de-nazaret');
 
   return (
     <div className="py-8 sm:py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs
-          items={[{ label: 'Belén Recortable para Niños' }]}
-          onNavigate={onNavigate}
-        />
+        <Breadcrumbs items={[{ label: 'Belén Recortable para Niños' }]} />
 
         <header className="bg-white rounded-3xl p-6 sm:p-10 border-2 border-amber-200 shadow-sm mb-8">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold mb-3">
@@ -479,39 +801,31 @@ export const BelenRecortablePage: React.FC<{
             <span>Manualidad Navideña Gratuita • Adviento y Catequesis</span>
           </span>
           <h1 className="font-display text-3xl sm:text-5xl font-black text-slate-900 leading-tight">
-            Belén recortable para niños: imprime, recorta y monta tu pesebre en casa
+            Belén recortable para niños: imprime, recorta y monta tu pesebre
           </h1>
           <div className="mt-4 space-y-3 text-sm sm:text-base text-slate-700 leading-relaxed max-w-4xl">
             <p>
-              Montar el Belén en Navidad es una de las tradiciones más bonitas para compartir tiempo de calidad con los niños mientras conversamos sobre la humildad, la acogida y la alegría del nacimiento de Jesús. Esta lámina A4 lista para imprimir reúne 16 piezas ilustradas con trazos cálidos e infantiles pensadas para recortar con tijeras escolares y levantar cada figura en 3D gracias a sus solapas inferiores.
+              Montar el Belén en Navidad es una tradición entrañable para compartir con los niños mientras conversamos sobre la humildad, la acogida y el nacimiento de Jesús. Esta lámina A4 reúne 16 piezas ilustradas pensadas para recortar con tijeras escolares y levantar cada figura en 3D gracias a sus solapas inferiores.
             </p>
             <p>
-              Es un recurso gratuito especialmente valorado por padres, abuelos, maestras de Religión y catequistas parroquiales durante el Adviento: combina motricidad fina, trabajo cooperativo entre hermanos y educación en valores cristianos sin coste ni registros. Solo necesitas imprimir la imagen en cartulina blanca de 180g (o pegarla sobre cartón fino), recortar por la línea discontinua y ordenar el portal junto con María, San José, el Niño Jesús, el buey, la mula, los pastores y los Reyes Magos.
+              Es un recurso gratuito para familias, maestras de Religión y catequistas: imprime la lámina en cartulina de 180g, recorta por la línea discontinua y ordena el portal junto a María, San José, el Niño Jesús, los pastores y los Reyes Magos.
             </p>
           </div>
           {luzStory && (
             <div className="mt-5 flex flex-wrap gap-3">
-              <a
-                href={`/cuentos/${luzStory.id}/`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  onNavigate(`/cuentos/${luzStory.id}/`);
-                }}
+              <Link
+                to={getStoryUrl(luzStory.id)}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-amber-100 hover:bg-amber-200 text-amber-950 font-bold text-xs sm:text-sm transition-colors"
               >
                 <BookOpen className="w-4 h-4" />
                 <span>Leer cuento ilustrado: La Luz de Nazaret</span>
-              </a>
-              <a
-                href="/oraciones/"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onNavigate('/oraciones/');
-                }}
+              </Link>
+              <Link
+                to="/oraciones"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-sm transition-colors"
               >
                 <span>🕊️ Ver oraciones infantiles para Navidad y familia</span>
-              </a>
+              </Link>
             </div>
           )}
         </header>
@@ -525,15 +839,11 @@ export const BelenRecortablePage: React.FC<{
 export const ColoringGalleryPage: React.FC<{
   stories: Story[];
   onOpenColoring: (story: Story) => void;
-  onNavigate: NavigateHandler;
-}> = ({ stories, onOpenColoring, onNavigate }) => {
+}> = ({ stories, onOpenColoring }) => {
   return (
     <div className="py-8 sm:py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs
-          items={[{ label: 'Dibujos para Colorear' }]}
-          onNavigate={onNavigate}
-        />
+        <Breadcrumbs items={[{ label: 'Dibujos para Colorear' }]} />
         <header className="bg-white rounded-3xl p-6 sm:p-10 border-2 border-sky-200 shadow-sm mb-8">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-100 text-sky-900 text-xs font-bold mb-3">
             <Palette className="w-3.5 h-3.5" />
@@ -544,20 +854,13 @@ export const ColoringGalleryPage: React.FC<{
           </h1>
           <div className="mt-4 space-y-3 text-sm sm:text-base text-slate-700 leading-relaxed max-w-4xl">
             <p>
-              Colorear después de escuchar o leer un cuento ayuda a los niños de 3 a 10 años a reposar las emociones de la historia, fijar el mensaje moral en la memoria y desarrollar la coordinación ojo-mano sin pantallas. Todas las láminas de esta galería están vinculadas a nuestros relatos sobre honestidad, amistad, paciencia, empatía, valentía y generosidad.
+              Colorear después de escuchar o leer un cuento ayuda a los niños de 3 a 10 años a reposar las emociones de la historia, fijar la moraleja en la memoria y desarrollar la motricidad fina.
             </p>
             <p>
-              Puedes abrir cualquier lámina en nuestro estudio digital para pintarla con colores en tablet u ordenador, o descargarla directamente en tu dispositivo para imprimir copias para clase de Infantil, Primaria, tutorías o sesiones de catequesis infantil. También te invitamos a visitar nuestro{' '}
-              <a
-                href="/belen-recortable/"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onNavigate('/belen-recortable/');
-                }}
-                className="font-bold text-sky-700 underline"
-              >
+              Puedes pintar cada lámina online o descargarla gratis para imprimir en clase de Infantil, Primaria o catequesis. También puedes descargar el{' '}
+              <Link to="/belen-recortable" className="font-bold text-sky-700 underline">
                 Belén recortable para imprimir
-              </a>
+              </Link>
               .
             </p>
           </div>
@@ -569,16 +872,11 @@ export const ColoringGalleryPage: React.FC<{
   );
 };
 
-export const PrayersPage: React.FC<{
-  onNavigate: NavigateHandler;
-}> = ({ onNavigate }) => {
+export const PrayersPage: React.FC = () => {
   return (
     <div className="py-8 sm:py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs
-          items={[{ label: 'Oraciones para Niños' }]}
-          onNavigate={onNavigate}
-        />
+        <Breadcrumbs items={[{ label: 'Oraciones para Niños' }]} />
         <header className="bg-white rounded-3xl p-6 sm:p-10 border-2 border-indigo-200 shadow-sm mb-8">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 text-xs font-bold mb-3">
             <Sparkles className="w-3.5 h-3.5" />
@@ -589,10 +887,7 @@ export const PrayersPage: React.FC<{
           </h1>
           <div className="mt-4 space-y-3 text-sm sm:text-base text-slate-700 leading-relaxed max-w-4xl">
             <p>
-              Enseñar a los más pequeños a agradecer el día, pedir paz antes de dormir y bendecir los alimentos en la mesa crea recuerdos familiares imborrables. Estas oraciones infantiles escritas en verso sencillo por Juancar Hidalgo emplean un lenguaje cercano, luminoso y adaptado para edades tempranas.
-            </p>
-            <p>
-              Son un complemento ideal para hogares cristianos, clases de Religión Católica y encuentros de catequesis infantil de despertar religioso y Primera Comunión. Cada oración incluye una breve &quot;Semillita de Paz&quot; para comentar en grupo o en familia y botones gratuitos para copiar el texto o descargar la ficha imprimible.
+              Oraciones infantiles escritas en verso sencillo por Juancar Hidalgo para agradecer el día, pedir paz antes de dormir y bendecir los alimentos en familia.
             </p>
           </div>
         </header>
@@ -604,27 +899,23 @@ export const PrayersPage: React.FC<{
 };
 
 export const AboutAuthorPage: React.FC<{
-  onNavigate: NavigateHandler;
   onOpenContact: () => void;
-}> = ({ onNavigate, onOpenContact }) => {
+}> = ({ onOpenContact }) => {
   return (
     <div className="py-8 sm:py-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <Breadcrumbs
-        items={[{ label: 'Sobre el Autor y el Proyecto' }]}
-        onNavigate={onNavigate}
-      />
+      <Breadcrumbs items={[{ label: 'Sobre Nosotros y Enfoque Pedagógico' }]} />
 
       <article className="bg-white rounded-3xl p-6 sm:p-10 border-2 border-amber-200 shadow-sm space-y-8">
         <header className="border-b border-amber-100 pb-6">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold mb-3">
             <UserCheck className="w-3.5 h-3.5" />
-            <span>Autoría y Transparencia Editorial</span>
+            <span>Autoría y Criterio Pedagógico (E-E-A-T)</span>
           </span>
           <h1 className="font-display text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
-            Sobre Juancar Hidalgo y Cuentos y Valores
+            Sobre nosotros: Juancar Hidalgo y el enfoque pedagógico de Cuentos y Valores
           </h1>
           <p className="mt-3 text-slate-600 text-base leading-relaxed">
-            Quién está detrás de cada relato, cómo se diseñan los recursos pedagógicos y por qué todo el material permanece abierto y gratuito para familias, escuelas y parroquias.
+            Autoría transparente, criterios educativos para Infantil y Primaria y compromiso de acceso abierto y gratuito para familias, escuelas y parroquias.
           </p>
         </header>
 
@@ -633,43 +924,61 @@ export const AboutAuthorPage: React.FC<{
             Nuestra misión educativa
           </h2>
           <p>
-            <strong>Cuentos y Valores</strong> nace de la ilusión de <strong>Juancar Hidalgo</strong> por ofrecer a padres, madres, abuelos, maestros y catequistas un rincón digital amable, libre de anuncios invasivos y sin necesidad de registros, donde la lectura compartida vuelva a ser el corazón de la tarde o del momento antes de dormir.
+            <strong>Cuentos y Valores</strong> es un proyecto independiente creado y editado por{' '}
+            <strong>Juancar Hidalgo</strong> para ofrecer a madres, padres, maestros y catequistas un espacio seguro, sin publicidad invasiva ni registros, donde la lectura compartida cultiva el diálogo familiar.
           </p>
           <p>
-            Cada historia parte de situaciones reconocibles para niños de 3 a 12 años —un accidente con un objeto valioso en clase, un amigo tímido que mira desde la valla, los nervios antes de cruzar un puente o el asombro de la primera Navidad— para sembrar virtudes duraderas: honestidad, empatía, valentía, paciencia, amistad y generosidad.
+            Cada cuento nace de escenas reconocibles entre los 3 y los 12 años para trabajar virtudes esenciales: empatía, respeto, honestidad, esfuerzo, paciencia, valentía, amistad y generosidad.
           </p>
         </section>
 
         <section className="space-y-4 text-slate-700 text-sm sm:text-base leading-relaxed">
           <h2 className="font-display text-2xl font-bold text-slate-900">
-            Criterios de calidad en cada cuento y actividad
+            Criterios pedagógicos de cada publicación
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200">
-              <h3 className="font-bold text-slate-900 mb-1">1. Lenguaje cercano y positivo</h3>
+              <h3 className="font-bold text-slate-900 mb-1">1. Narrativa respetuosa sin sermones</h3>
               <p className="text-xs sm:text-sm text-slate-600">
-                Evitamos los sermones rígidos: los niños aprenden empatizando con personajes que dudan, se equivocan y rectifican con cariño.
+                Los personajes dudan, cometen errores cotidianos y aprenden con apoyo de amigos o docentes.
               </p>
             </div>
             <div className="p-4 rounded-2xl bg-sky-50/70 border border-sky-200">
-              <h3 className="font-bold text-slate-900 mb-1">2. Audio, diálogo y dibujo</h3>
+              <h3 className="font-bold text-slate-900 mb-1">2. Estructura completa para el aula</h3>
               <p className="text-xs sm:text-sm text-slate-600">
-                Cada cuento incluye lectura íntegra en pantalla, narración de audio, tres preguntas para conversar y una lámina propia para colorear.
+                Lectura HTML completa, audio narrado, tres preguntas abiertas y una actividad práctica con lámina para colorear.
               </p>
             </div>
             <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200">
-              <h3 className="font-bold text-slate-900 mb-1">3. Raíces cristianas abiertas a todos</h3>
+              <h3 className="font-bold text-slate-900 mb-1">3. Valores universales y raíces cristianas</h3>
               <p className="text-xs sm:text-sm text-slate-600">
-                Además de virtudes cívicas universales, ofrecemos materiales específicos para catequesis y familias creyentes como La Luz de Nazaret, Oraciones y el Belén recortable.
+                Además de virtudes cívicas y educación emocional, incluimos recursos para catequesis como La Luz de Nazaret, Oraciones y el Belén recortable.
               </p>
             </div>
             <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200">
               <h3 className="font-bold text-slate-900 mb-1">4. Uso responsable de la IA</h3>
               <p className="text-xs sm:text-sm text-slate-600">
-                Las herramientas de apoyo interactivo como Valerio están orientadas exclusivamente a inspirar relatos familiares y deben usarse con acompañamiento adulto.
+                El asistente Valerio cuenta con directrices pedagógicas estrictas y está pensado para usarse bajo supervisión adulta.
               </p>
             </div>
           </div>
+        </section>
+
+        <section className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-slate-700">
+          <h2 className="font-display text-lg font-bold text-slate-900 mb-2">
+            Contacto editorial directo
+          </h2>
+          <p className="mb-3">
+            ¿Eres docente, catequista o padre y te gustaría proponer un valor o mejora pedagógica? Escríbenos directamente a{' '}
+            <a
+              href="mailto:jchurizar@gmail.com"
+              className="font-bold text-amber-800 underline inline-flex items-center gap-1"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              <span>jchurizar@gmail.com</span>
+            </a>{' '}
+            o utiliza el buzón de sugerencias.
+          </p>
         </section>
 
         <footer className="pt-6 border-t border-amber-100 flex flex-wrap items-center justify-between gap-4">
@@ -680,17 +989,13 @@ export const AboutAuthorPage: React.FC<{
           >
             <span>Enviar sugerencia a Juancar Hidalgo</span>
           </button>
-          <a
-            href="/"
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigate('/');
-            }}
+          <Link
+            to="/cuentos"
             className="inline-flex items-center gap-1.5 text-sm font-bold text-amber-800 hover:text-amber-950"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Volver al catálogo principal</span>
-          </a>
+            <span>Ir al catálogo de cuentos</span>
+          </Link>
         </footer>
       </article>
     </div>
@@ -698,15 +1003,11 @@ export const AboutAuthorPage: React.FC<{
 };
 
 export const LegalPrivacyPage: React.FC<{
-  onNavigate: NavigateHandler;
   onOpenContact: () => void;
-}> = ({ onNavigate, onOpenContact }) => {
+}> = ({ onOpenContact }) => {
   return (
     <div className="py-8 sm:py-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <Breadcrumbs
-        items={[{ label: 'Aviso Legal y Política de Privacidad' }]}
-        onNavigate={onNavigate}
-      />
+      <Breadcrumbs items={[{ label: 'Aviso Legal y Política de Privacidad' }]} />
 
       <article className="bg-white rounded-3xl p-6 sm:p-10 border-2 border-slate-200 shadow-sm space-y-7 text-sm sm:text-base text-slate-700 leading-relaxed">
         <header className="border-b border-slate-200 pb-6">
@@ -724,7 +1025,11 @@ export const LegalPrivacyPage: React.FC<{
             1. Titularidad y finalidad educativa
           </h2>
           <p>
-            <strong>Cuentos y Valores</strong> (<code>https://www.cuentosyvalores.es</code>) es un portal cultural y educativo sin ánimo de lucro creado por <strong>Juancar Hidalgo</strong>. Su finalidad exclusiva es difundir gratuitamente cuentos infantiles ilustrados, oraciones y manualidades recortables para familias, colegios y grupos de catequesis.
+            <strong>Cuentos y Valores</strong> (<code>https://cuentosyvalores.es</code>) es un portal cultural y educativo sin ánimo de lucro creado por <strong>Juancar Hidalgo</strong> (contacto:{' '}
+            <a href="mailto:jchurizar@gmail.com" className="underline text-amber-800">
+              jchurizar@gmail.com
+            </a>
+            ). Su finalidad exclusiva es difundir gratuitamente cuentos infantiles ilustrados, oraciones y manualidades recortables para familias, colegios y catequesis.
           </p>
         </section>
 
@@ -733,10 +1038,7 @@ export const LegalPrivacyPage: React.FC<{
             2. Política de privacidad y cero registros infantiles
           </h2>
           <p>
-            No solicitamos registro, creación de cuentas ni datos personales a menores para leer los cuentos, escuchar audios o descargar láminas. Únicamente si un adulto utiliza voluntariamente el formulario de contacto o sugerencias, los datos proporcionados (nombre opcional, correo y mensaje) se emplean exclusivamente para responder a su consulta o valorar su propuesta pedagógica.
-          </p>
-          <p>
-            Algunas preferencias de uso local (como favoritos o enlaces guardados en tu navegador) permanecen únicamente en el almacenamiento local de tu dispositivo.
+            No solicitamos registro ni datos personales a menores para leer los cuentos, escuchar audios o descargar láminas. Únicamente si un adulto utiliza voluntariamente el formulario de contacto, los datos aportados se emplean exclusivamente para responder a su sugerencia.
           </p>
         </section>
 
@@ -746,7 +1048,7 @@ export const LegalPrivacyPage: React.FC<{
             <span>3. Normas de uso del asistente Valerio (Inteligencia Artificial)</span>
           </h2>
           <p>
-            El asistente creativo &quot;Habla con Valerio&quot; utiliza inteligencia artificial configurada con directrices educativas amables y libres de contenido violento o inapropiado. No obstante, <strong>ningún modelo de IA es infalible al 100%</strong>, por lo que recomendamos que madres, padres, tutores o docentes acompañen y supervisen a los menores cuando generen historias personalizadas y revisen no introducir datos personales reales en el chat.
+            El asistente creativo &quot;Habla con Valerio&quot; utiliza inteligencia artificial configurada con directrices educativas amables y libres de contenido violento. Como en cualquier herramienta de IA, recomendamos que madres, padres o docentes acompañen a los menores y eviten introducir datos personales reales en el chat.
           </p>
         </section>
 
@@ -755,7 +1057,7 @@ export const LegalPrivacyPage: React.FC<{
             4. Propiedad intelectual y licencia educativa
           </h2>
           <p>
-            Se autoriza libremente la impresión, lectura en voz alta y reparto en aulas escolares, parroquias o domicilios particulares de todos los cuentos, oraciones y dibujos de la web, siempre que se realice sin fines comerciales y respetando la autoría del proyecto.
+            Se autoriza libremente la impresión, lectura en voz alta y uso en aulas escolares, parroquias o domicilios particulares de todos los cuentos, oraciones y dibujos sin fines comerciales, citando la autoría del proyecto.
           </p>
         </section>
 
@@ -767,17 +1069,13 @@ export const LegalPrivacyPage: React.FC<{
           >
             Contactar con el responsable
           </button>
-          <a
-            href="/"
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigate('/');
-            }}
+          <Link
+            to="/"
             className="inline-flex items-center gap-1.5 text-sm font-bold text-amber-800 hover:text-amber-950"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Volver al inicio</span>
-          </a>
+          </Link>
         </footer>
       </article>
     </div>
