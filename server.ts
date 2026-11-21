@@ -612,11 +612,19 @@ Tu misión es conversar con padres, educadores y niños con suma calidez, respet
     });
   });
 
-  // Serve Vite in development or static files in production
+  // Serve Vite in development or prerendered static files in production
   if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'dist')));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    const distDir = path.join(__dirname, 'dist');
+    app.use(express.static(distDir, { redirect: false }));
+    app.get('*', (req: Request, res: Response) => {
+      const cleanPath = req.path.replace(/^\/+|\/+$/g, '');
+      const prerenderedFile = cleanPath
+        ? path.join(distDir, cleanPath, 'index.html')
+        : path.join(distDir, 'index.html');
+      if (fs.existsSync(prerenderedFile)) {
+        return res.sendFile(prerenderedFile);
+      }
+      return res.sendFile(path.join(distDir, 'index.html'));
     });
   } else {
     const { createServer: createViteServer } = await import('vite');
