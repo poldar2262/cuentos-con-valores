@@ -42,6 +42,13 @@
         "@context": "https://schema.org",
         "@graph": [
           {
+            "@type": "Person",
+            "@id": "https://www.cuentosyvalores.es/sobre-el-autor/#person",
+            "name": "Juancar Hidalgo",
+            "url": "https://www.cuentosyvalores.es/sobre-el-autor/",
+            "jobTitle": "Autor de literatura infantil educativa y creador de Cuentos y Valores"
+          },
+          {
             "@type": "Organization",
             "@id": "https://www.cuentosyvalores.es/#organization",
             "name": "Cuentos y Valores",
@@ -49,6 +56,9 @@
             "logo": {
               "@type": "ImageObject",
               "url": "https://www.cuentosyvalores.es/assets/og-cuentos-y-valores.jpg"
+            },
+            "founder": {
+              "@id": "https://www.cuentosyvalores.es/sobre-el-autor/#person"
             }
           },
           {
@@ -56,7 +66,7 @@
             "@id": "https://www.cuentosyvalores.es/#website",
             "url": "https://www.cuentosyvalores.es/",
             "name": "Cuentos y Valores",
-            "description": "Cuentos infantiles ilustrados con valores y actividades educativas para familias y colegios.",
+            "description": "Cuentos infantiles ilustrados con valores y actividades educativas para familias, colegios y catequesis.",
             "inLanguage": "es",
             "publisher": {
               "@id": "https://www.cuentosyvalores.es/#organization"
@@ -72,7 +82,7 @@
             },
             "about": {
               "@type": "Thing",
-              "name": "Educación en valores mediante cuentos infantiles ilustrados"
+              "name": "Educación en valores y recursos cristianos mediante cuentos infantiles ilustrados"
             },
             "audience": {
               "@type": "EducationalAudience",
@@ -106,6 +116,14 @@
                 "acceptedAnswer": {
                   "@type": "Answer",
                   "text": "Sí. Cada cuento incluye preguntas de reflexión en familia o aula, audio narrado y láminas descargables listas para trabajar en clase sin necesidad de registro."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "¿Es seguro el contenido generado por Valerio para los niños?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Está configurado con criterios pedagógicos estrictos para redactar historias amables y libres de violencia centradas en virtudes positivas. Como con cualquier herramienta de IA, recomendamos la supervisión de un adulto."
                 }
               }
             ]
