@@ -48,7 +48,7 @@ export const Hero: React.FC<HeroProps> = ({
 
           {/* Intro Description */}
           <p className="mt-4 sm:mt-6 text-base sm:text-lg text-slate-700 leading-relaxed font-normal">
-            Historias alegres y tiernas escritas por{' '}
+            En <strong className="text-slate-900 font-bold">Cuentos y Valores, de{' '}
             <a
               href="/sobre-el-autor/"
               onClick={(e) => {
@@ -60,8 +60,7 @@ export const Hero: React.FC<HeroProps> = ({
               className="font-bold text-amber-800 underline hover:text-amber-950"
             >
               Juancar Hidalgo
-            </a>{' '}
-            para inspirar virtudes como la{' '}
+            </a></strong>, encontrarás historias alegres y tiernas para inspirar virtudes como la{' '}
             <strong className="text-slate-900 font-bold">honestidad</strong>, la{' '}
             <strong className="text-slate-900 font-bold">valentía</strong> y la{' '}
             <strong className="text-slate-900 font-bold">empatía</strong> en niños de 3 a 12 años. Ideales también como cuentos con valores cristianos y{' '}

@@ -637,14 +637,14 @@ export function getRouteSeoMeta(pathname: string): RouteSeoMeta {
   const isNotFound = resolved.type === 'not-found';
   return {
     title: isNotFound
-      ? 'Página no encontrada | Cuentos y Valores'
-      : 'Cuentos con valores para niños | Ilustrados y educativos',
+      ? 'Página no encontrada | Cuentos y Valores, de Juancar Hidalgo'
+      : 'Cuentos y Valores, de Juancar Hidalgo | Cuentos infantiles ilustrados',
     description:
-      'Lee cuentos infantiles ilustrados con valores y descarga actividades educativas para niños. Recursos ideales para familias, colegios y catequesis. ¡Explóralos!',
+      'En Cuentos y Valores, de Juancar Hidalgo, lee cuentos infantiles ilustrados con valores y descarga actividades educativas para familias, colegios y catequesis.',
     canonical: `${SITE_URL}/`,
     ogType: 'website',
     ogImage: `${SITE_URL}/assets/og-cuentos-y-valores.jpg`,
-    ogImageAlt: 'Ilustración de portada de Cuentos y Valores con cuentos infantiles educativos',
+    ogImageAlt: 'Ilustración de portada de Cuentos y Valores, de Juancar Hidalgo',
     robots: isNotFound ? 'noindex, follow' : 'index, follow',
     jsonLd: {
       '@context': 'https://schema.org',

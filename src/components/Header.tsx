@@ -46,10 +46,10 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div>
               <span className="font-display text-xl sm:text-2xl font-bold text-slate-800 tracking-tight block leading-tight">
-                Cuentos con Valores
+                Cuentos y Valores
               </span>
-              <span className="text-[11px] font-semibold text-amber-600 block">
-                Audiocuentos y Láminas para Colorear
+              <span className="text-[11px] font-semibold text-amber-700 block">
+                Por Juancar Hidalgo · Cuentos y Láminas
               </span>
             </div>
           </a>

@@ -46,7 +46,7 @@ export const Footer: React.FC<FooterProps> = ({
                 <BookOpen className="w-5 h-5 text-amber-900" />
               </div>
               <span className="font-display text-xl font-bold text-slate-900">
-                Cuentos con Valores
+                Cuentos y Valores
               </span>
             </a>
 
@@ -214,7 +214,7 @@ export const Footer: React.FC<FooterProps> = ({
               Privacidad y aviso legal
             </a>
             <span>
-              © {new Date().getFullYear()} Cuentos con Valores
+              © {new Date().getFullYear()} Cuentos y Valores · Juancar Hidalgo
             </span>
           </div>
         </div>
