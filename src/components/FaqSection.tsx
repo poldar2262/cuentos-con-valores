@@ -26,16 +26,23 @@ const FAQS = [
   {
     question: '¿Es seguro el contenido generado por Valerio para los niños?',
     answer:
-      'Totalmente. Valerio está configurado con criterios pedagógicos estrictos para redactar historias amables, respetuosas y libres de violencia, siempre enfocadas en virtudes positivas como la empatía, la honestidad, la paciencia o la amistad.',
+      'Valerio está configurado con criterios pedagógicos estrictos para redactar historias amables, respetuosas y libres de violencia, siempre enfocadas en virtudes positivas como la empatía, la honestidad, la paciencia o la amistad. Como ocurre con cualquier herramienta basada en inteligencia artificial, recomendamos el acompañamiento y supervisión de madres, padres o docentes durante su uso.',
     icon: ShieldCheck,
     color: 'text-indigo-600 bg-indigo-50 border-indigo-200',
   },
   {
     question: '¿Cómo se descargan los cuentos y dibujos para leer o imprimir en casa?',
     answer:
-      'En cada lector de cuento, lámina de dibujo, oración o en el Belén recortable encontrarás botones de descarga directa para guardar los archivos en tu ordenador, tablet o móvil y poder leerlos sin conexión o imprimirlos cuando quieras.',
+      'En cada página de cuento, lámina de dibujo, oración o en el Belén recortable encontrarás botones de descarga directa para guardar los materiales en tu ordenador, tablet o móvil e imprimirlos fácilmente cuando quieras.',
     icon: Palette,
     color: 'text-rose-600 bg-rose-50 border-rose-200',
+  },
+  {
+    question: '¿Tenéis recursos con valores cristianos para catequesis y Navidad?',
+    answer:
+      'Sí. Contamos con una sección específica de oraciones cortas infantiles, el cuento ilustrado para colorear La Luz de Nazaret y nuestro Belén recortable A4 listo para armar en parroquias, colegios y familias durante el Adviento y la Navidad.',
+    icon: Sparkles,
+    color: 'text-amber-700 bg-amber-50 border-amber-200',
   },
 ];
 

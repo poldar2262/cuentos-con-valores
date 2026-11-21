@@ -2,12 +2,15 @@ import React from 'react';
 import { Sparkles, Headphones, BookOpen, Palette, CheckCircle2 } from 'lucide-react';
 import { ValueCategory } from '../types';
 
+import { getValueSlug } from '../data/seoRoutes';
+
 interface HeroProps {
   selectedCategory: ValueCategory;
   onSelectCategory: (cat: ValueCategory) => void;
   categories: ValueCategory[];
   totalStories: number;
   onOpenChatbot?: () => void;
+  onNavigate?: (href: string) => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({
@@ -16,6 +19,7 @@ export const Hero: React.FC<HeroProps> = ({
   categories,
   totalStories,
   onOpenChatbot,
+  onNavigate,
 }) => {
   return (
     <section className="relative overflow-hidden pt-8 pb-12 sm:pt-12 sm:pb-16 bg-gradient-to-b from-amber-100/60 via-amber-50/40 to-transparent">
@@ -30,7 +34,7 @@ export const Hero: React.FC<HeroProps> = ({
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-amber-300/80 shadow-xs mb-5">
             <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
             <span className="text-xs sm:text-sm font-bold text-amber-900 tracking-wide">
-              Proyecto Educativo e Infantil • Lectura con Propósito
+              Familias, Colegios y Catequesis • Lectura Gratuita con Valores
             </span>
           </div>
 
@@ -44,12 +48,49 @@ export const Hero: React.FC<HeroProps> = ({
 
           {/* Intro Description */}
           <p className="mt-4 sm:mt-6 text-base sm:text-lg text-slate-700 leading-relaxed font-normal">
-            Historias alegres y tiernas diseñadas para inspirar virtudes como la{' '}
+            Historias alegres y tiernas escritas por{' '}
+            <a
+              href="/sobre-el-autor/"
+              onClick={(e) => {
+                if (onNavigate) {
+                  e.preventDefault();
+                  onNavigate('/sobre-el-autor/');
+                }
+              }}
+              className="font-bold text-amber-800 underline hover:text-amber-950"
+            >
+              Juancar Hidalgo
+            </a>{' '}
+            para inspirar virtudes como la{' '}
             <strong className="text-slate-900 font-bold">honestidad</strong>, la{' '}
             <strong className="text-slate-900 font-bold">valentía</strong> y la{' '}
-            <strong className="text-slate-900 font-bold">empatía</strong> en niños de 3 a 12 años. Cada cuento incluye{' '}
-            <strong className="text-slate-900 font-bold">audiocuento integrado</strong>, lector digital y{' '}
-            <strong className="text-slate-900 font-bold">láminas descargables para colorear</strong> en casa o en el colegio.
+            <strong className="text-slate-900 font-bold">empatía</strong> en niños de 3 a 12 años. Ideales también como cuentos con valores cristianos y{' '}
+            <a
+              href="/oraciones/"
+              onClick={(e) => {
+                if (onNavigate) {
+                  e.preventDefault();
+                  onNavigate('/oraciones/');
+                }
+              }}
+              className="font-bold text-indigo-800 underline hover:text-indigo-950"
+            >
+              recursos para catequesis
+            </a>
+            , con audiocuento y{' '}
+            <a
+              href="/dibujos-para-colorear/"
+              onClick={(e) => {
+                if (onNavigate) {
+                  e.preventDefault();
+                  onNavigate('/dibujos-para-colorear/');
+                }
+              }}
+              className="font-bold text-sky-800 underline hover:text-sky-950"
+            >
+              láminas para colorear gratis
+            </a>
+            .
           </p>
 
           {/* Feature Highlights Pills */}
@@ -58,14 +99,31 @@ export const Hero: React.FC<HeroProps> = ({
               <Headphones className="w-4 h-4 text-amber-500" />
               Audiocuentos Integrados
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white border border-sky-200 shadow-xs">
+            <a
+              href="/dibujos-para-colorear/"
+              onClick={(e) => {
+                if (onNavigate) {
+                  e.preventDefault();
+                  onNavigate('/dibujos-para-colorear/');
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white border border-sky-200 shadow-xs hover:border-sky-400 transition-colors"
+            >
               <Palette className="w-4 h-4 text-sky-500" />
               Láminas para Colorear
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white border border-emerald-200 shadow-xs">
-              <BookOpen className="w-4 h-4 text-emerald-500" />
-              Guía de Preguntas Familiares
-            </span>
+            </a>
+            <a
+              href="/belen-recortable/"
+              onClick={(e) => {
+                if (onNavigate) {
+                  e.preventDefault();
+                  onNavigate('/belen-recortable/');
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-amber-50 border border-amber-300 shadow-xs hover:bg-amber-100 text-amber-950 transition-colors"
+            >
+              <span>✂️ Especial Navidad: Belén Recortable</span>
+            </a>
           </div>
 
           {/* Primary CTAs */}
@@ -90,10 +148,10 @@ export const Hero: React.FC<HeroProps> = ({
             )}
           </div>
 
-          {/* Category Filter Chips */}
+          {/* Category Filter Chips + Crawlable Links */}
           <div className="mt-8 pt-6 border-t border-amber-200/60">
             <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-500 mb-3">
-              <span>Filtrar por Valor o Virtud:</span>
+              <span>Filtrar aquí o abrir página de cada valor:</span>
               <span className="px-2 py-0.5 rounded-full bg-amber-200/60 text-amber-900 text-[11px]">
                 {totalStories} disponibles
               </span>
@@ -102,19 +160,38 @@ export const Hero: React.FC<HeroProps> = ({
             <div className="flex flex-wrap items-center justify-center gap-2">
               {categories.map((category) => {
                 const isActive = selectedCategory === category;
+                const valHref =
+                  category === 'Todos'
+                    ? '/'
+                    : `/valores/${getValueSlug(category)}/`;
                 return (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => onSelectCategory(category)}
-                    className={`px-3.5 py-1.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs ${
-                      isActive
-                        ? 'bg-amber-500 text-white scale-105 shadow-md'
-                        : 'bg-white text-slate-700 hover:bg-amber-100/80 border border-amber-200'
-                    }`}
-                  >
-                    {category === 'Todos' ? '🌈 Todos los Cuentos' : `⭐ ${category}`}
-                  </button>
+                  <div key={category} className="inline-flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => onSelectCategory(category)}
+                      className={`px-3.5 py-1.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs ${
+                        isActive
+                          ? 'bg-amber-500 text-white scale-105 shadow-md'
+                          : 'bg-white text-slate-700 hover:bg-amber-100/80 border border-amber-200'
+                      }`}
+                    >
+                      {category === 'Todos' ? '🌈 Todos los Cuentos' : `⭐ ${category}`}
+                    </button>
+                    {category !== 'Todos' && (
+                      <a
+                        href={valHref}
+                        onClick={(e) => {
+                          if (onNavigate) {
+                            e.preventDefault();
+                            onNavigate(valHref);
+                          }
+                        }}
+                        className="sr-only"
+                      >
+                        Cuentos sobre {category}
+                      </a>
+                    )}
+                  </div>
                 );
               })}
             </div>

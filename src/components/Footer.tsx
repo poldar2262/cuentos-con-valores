@@ -1,41 +1,72 @@
 import React from 'react';
-import { Heart, BookOpen, Mail, Sparkles, Share2, Printer, HelpCircle, Lock } from 'lucide-react';
+import { Heart, BookOpen, Sparkles, HelpCircle } from 'lucide-react';
 
 interface FooterProps {
   onOpenContact: () => void;
   onOpenManual?: () => void;
-  onOpenAdmin?: () => void;
   onOpenChatbot?: () => void;
+  onNavigate?: (href: string) => void;
 }
+
+const FOOTER_VALUES = [
+  { label: 'Honestidad', slug: 'honestidad', cls: 'bg-amber-100/70 text-amber-800 hover:bg-amber-200' },
+  { label: 'Valentía', slug: 'valentia', cls: 'bg-rose-100/70 text-rose-800 hover:bg-rose-200' },
+  { label: 'Empatía', slug: 'empatia', cls: 'bg-sky-100/70 text-sky-800 hover:bg-sky-200' },
+  { label: 'Generosidad', slug: 'generosidad', cls: 'bg-emerald-100/70 text-emerald-800 hover:bg-emerald-200' },
+  { label: 'Paciencia', slug: 'paciencia', cls: 'bg-teal-100/70 text-teal-800 hover:bg-teal-200' },
+  { label: 'Amistad', slug: 'amistad', cls: 'bg-indigo-100/70 text-indigo-800 hover:bg-indigo-200' },
+  { label: 'Cooperación', slug: 'cooperacion', cls: 'bg-cyan-100/70 text-cyan-800 hover:bg-cyan-200' },
+];
 
 export const Footer: React.FC<FooterProps> = ({
   onOpenContact,
   onOpenManual,
-  onOpenAdmin,
   onOpenChatbot,
+  onNavigate,
 }) => {
+  const handleLink = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (onNavigate) {
+      e.preventDefault();
+      onNavigate(href);
+    }
+  };
+
   return (
     <footer className="bg-white border-t border-amber-200 mt-16 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
           {/* Col 1: Brand & Philosophy */}
           <div className="md:col-span-2 space-y-3">
-            <div className="flex items-center gap-2.5">
+            <a
+              href="/"
+              onClick={(e) => handleLink(e, '/')}
+              className="inline-flex items-center gap-2.5"
+            >
               <div className="w-10 h-10 rounded-2xl bg-amber-400 flex items-center justify-center text-amber-950 font-bold">
                 <BookOpen className="w-5 h-5 text-amber-900" />
               </div>
               <span className="font-display text-xl font-bold text-slate-900">
                 Cuentos con Valores
               </span>
-            </div>
+            </a>
 
             <p className="text-sm text-slate-600 leading-relaxed max-w-md">
-              Un proyecto educativo y cultural concebido con amor para ayudar a padres, madres y docentes a cultivar virtudes esenciales en la infancia mediante la imaginación, la palabra hablada y el dibujo creativo.
+              Un proyecto educativo y cristiano concebido con amor por{' '}
+              <a
+                href="/sobre-el-autor/"
+                onClick={(e) => handleLink(e, '/sobre-el-autor/')}
+                className="font-semibold text-amber-800 underline hover:text-amber-950"
+              >
+                Juancar Hidalgo
+              </a>{' '}
+              para ayudar a padres, maestros y catequistas a cultivar virtudes esenciales mediante la lectura, el audio y el dibujo.
             </p>
 
-            <div className="flex items-center gap-2 text-xs font-semibold text-amber-800 bg-amber-50 px-3 py-1.5 rounded-xl inline-flex border border-amber-200">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>100% de libre acceso para hogares y escuelas</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="text-xs font-semibold text-amber-800 bg-amber-50 px-3 py-1.5 rounded-xl inline-flex items-center gap-1.5 border border-amber-200">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                <span>100% libre acceso para familias y colegios</span>
+              </div>
             </div>
           </div>
 
@@ -46,18 +77,57 @@ export const Footer: React.FC<FooterProps> = ({
             </h3>
             <ul className="space-y-2 text-xs sm:text-sm text-slate-600 font-semibold">
               <li>
-                <a href="#cuentos" className="hover:text-amber-600 transition-colors">
+                <a
+                  href="/#cuentos"
+                  onClick={(e) => handleLink(e, '/#cuentos')}
+                  className="hover:text-amber-600 transition-colors"
+                >
                   Catálogo de Cuentos
                 </a>
               </li>
               <li>
-                <a href="#descargas" className="hover:text-amber-600 transition-colors">
-                  Dibujos para Colorear (PDF)
+                <a
+                  href="/belen-recortable/"
+                  onClick={(e) => handleLink(e, '/belen-recortable/')}
+                  className="hover:text-amber-700 text-amber-900 transition-colors"
+                >
+                  ✂️ Belén Recortable para Niños
                 </a>
               </li>
               <li>
-                <a href="#oraciones" className="hover:text-indigo-600 text-indigo-900 transition-colors">
-                  🕊️ Oraciones para Niños
+                <a
+                  href="/dibujos-para-colorear/"
+                  onClick={(e) => handleLink(e, '/dibujos-para-colorear/')}
+                  className="hover:text-sky-700 transition-colors"
+                >
+                  🎨 Dibujos para Colorear
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/oraciones/"
+                  onClick={(e) => handleLink(e, '/oraciones/')}
+                  className="hover:text-indigo-600 text-indigo-900 transition-colors"
+                >
+                  🕊️ Oraciones y Catequesis
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/sobre-el-autor/"
+                  onClick={(e) => handleLink(e, '/sobre-el-autor/')}
+                  className="hover:text-amber-600 transition-colors"
+                >
+                  Sobre Juancar Hidalgo
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/privacidad-y-aviso-legal/"
+                  onClick={(e) => handleLink(e, '/privacidad-y-aviso-legal/')}
+                  className="hover:text-amber-600 transition-colors"
+                >
+                  Privacidad y Aviso Legal
                 </a>
               </li>
               {onOpenChatbot && (
@@ -67,21 +137,11 @@ export const Footer: React.FC<FooterProps> = ({
                     onClick={onOpenChatbot}
                     className="text-amber-700 font-bold hover:text-amber-900 transition-colors cursor-pointer text-left flex items-center gap-1.5"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                     <span>Cuentos Personalizados (IA)</span>
                   </button>
                 </li>
               )}
-              <li>
-                <a href="#valores" className="hover:text-amber-600 transition-colors">
-                  Guía de Valores y Virtudes
-                </a>
-              </li>
-              <li>
-                <a href="#faq" className="hover:text-amber-600 transition-colors">
-                  Preguntas Frecuentes
-                </a>
-              </li>
               {onOpenManual && (
                 <li>
                   <button
@@ -100,7 +160,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={onOpenContact}
                   className="hover:text-amber-600 transition-colors cursor-pointer text-left"
                 >
-                  Sugerir una historia o valor
+                  Contacto / Sugerir historia
                 </button>
               </li>
             </ul>
@@ -109,30 +169,25 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Col 3: Valores destacados */}
           <div>
             <h3 className="font-display font-bold text-slate-900 text-sm mb-3">
-              Valores del Proyecto
+              Cuentos por Valores
             </h3>
             <div className="flex flex-wrap gap-1.5 text-xs">
-              <span className="px-2.5 py-1 rounded-lg bg-amber-100/70 text-amber-800 font-bold">
-                Honestidad
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-rose-100/70 text-rose-800 font-bold">
-                Valentía
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-sky-100/70 text-sky-800 font-bold">
-                Empatía
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-emerald-100/70 text-emerald-800 font-bold">
-                Generosidad
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-teal-100/70 text-teal-800 font-bold">
-                Paciencia
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-indigo-100/70 text-indigo-800 font-bold">
-                Cooperación
-              </span>
+              {FOOTER_VALUES.map((val) => {
+                const href = `/valores/${val.slug}/`;
+                return (
+                  <a
+                    key={val.slug}
+                    href={href}
+                    onClick={(e) => handleLink(e, href)}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition-colors ${val.cls}`}
+                  >
+                    {val.label}
+                  </a>
+                );
+              })}
             </div>
             <p className="text-[11px] text-slate-500 mt-3">
-              Todos los cuentos y láminas pueden descargarse de forma directa y segura para leer o imprimir en casa o en clase.
+              Todos los cuentos, oraciones y láminas pueden leerse online y descargarse gratis para imprimir en casa, colegio o parroquia.
             </p>
           </div>
         </div>
@@ -140,24 +195,27 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Bottom bar */}
         <div className="pt-8 border-t border-amber-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p className="flex items-center gap-1 text-center sm:text-left">
-            Hecho con <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500 inline" /> para JCH y todas las familias amantes de la lectura.
+            Hecho con <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500 inline" /> por Juancar Hidalgo para familias, escuelas y catequesis.
           </p>
 
-          <div className="flex items-center gap-4">
-            <p className="text-center sm:text-right">
-              © {new Date().getFullYear()} Cuentos con Valores. Todos los materiales son de uso educativo gratuito.
-            </p>
-            {onOpenAdmin && (
-              <button
-                type="button"
-                onClick={onOpenAdmin}
-                className="text-slate-400 hover:text-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
-                title="Acceso de administración"
-              >
-                <Lock className="w-3 h-3" />
-                <span className="text-[11px]">Administración</span>
-              </button>
-            )}
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-4">
+            <a
+              href="/sobre-el-autor/"
+              onClick={(e) => handleLink(e, '/sobre-el-autor/')}
+              className="hover:text-slate-800 underline"
+            >
+              Sobre el autor
+            </a>
+            <a
+              href="/privacidad-y-aviso-legal/"
+              onClick={(e) => handleLink(e, '/privacidad-y-aviso-legal/')}
+              className="hover:text-slate-800 underline"
+            >
+              Privacidad y aviso legal
+            </a>
+            <span>
+              © {new Date().getFullYear()} Cuentos con Valores
+            </span>
           </div>
         </div>
       </div>

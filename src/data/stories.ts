@@ -14,10 +14,10 @@ export const STORIES: Story[] = [
     readingTime: '5 min de lectura',
     bookType: 'cuento',
     summary: 'El profesor llevó a clase un valioso telescopio dorado antiguo para observar las estrellas. Cuando un desafortunado tropiezo provoca que una pieza se rompa, Mateo se enfrenta al dilema de callar o dar la cara con sinceridad y valentía.',
-    coverImage: '/assets/mateo-telescopio-roto.jpg',
+    coverImage: '/assets/mateo-telescopio-roto.webp',
     pdfUrl: '', // Pendiente del enlace de Google Drive
     coloringPdfUrl: '',
-    audioUrl: '/audio/cajita-estrellas.wav',
+    audioUrl: '/audio/telescopio-honestidad.mp3',
     audioDuration: '4:20 min',
     moralLesson: 'Un error accidental le puede ocurrir a cualquiera; lo que define nuestro carácter es tener la honestidad y la valentía de reconocerlo de inmediato.',
     discussionQuestions: [
@@ -72,7 +72,7 @@ export const STORIES: Story[] = [
       title: 'Mateo y el Telescopio',
       characterName: 'Mateo',
       svgId: 'mateo-telescopio',
-      lineartImage: '/assets/colorear_telescopio.jpg'
+      lineartImage: '/assets/colorear_telescopio.webp'
     }
   },
   {
@@ -88,10 +88,10 @@ export const STORIES: Story[] = [
     readingTime: '5 min de lectura',
     bookType: 'cuento',
     summary: 'En una tarde lluviosa dentro del garaje, Leo y Maya descubren una enorme caja de cartón. Lo que para otros sería un simple desecho, para dos amigos inseparables se convierte en la nave estelar más veloz del universo. Juntos aprenderán que el mayor motor de cualquier viaje es confiar el uno en el otro.',
-    coverImage: '/assets/una-mision-para-dos.jpg',
+    coverImage: '/assets/una-mision-para-dos.webp',
     pdfUrl: '',
     coloringPdfUrl: '',
-    audioUrl: '/audio/aventura-valiente.wav',
+    audioUrl: '/audio/mision-amistad.mp3',
     audioDuration: '4:20 min',
     moralLesson: 'Un buen amigo no solo te acompaña en el juego: te escucha, valora tus ideas y te ayuda a llegar a lugares que jamás habrías alcanzado solo.',
     discussionQuestions: [
@@ -151,7 +151,7 @@ export const STORIES: Story[] = [
       title: 'Una Misión para Dos: La Nave de Cartón',
       characterName: 'Leo y Maya',
       svgId: 'mision-dos',
-      lineartImage: '/assets/colorear_mision_dos.jpg'
+      lineartImage: '/assets/colorear_mision_dos.webp'
     }
   },
   {
@@ -167,10 +167,10 @@ export const STORIES: Story[] = [
     readingTime: '5 min de lectura',
     bookType: 'cuento',
     summary: 'Mateo no puede esperar ni un segundo: quiere ver la lluvia de estrellas fugaces ya mismo. Su maestro Don Julián le enseñará que la noche tiene sus propios ritmos y que la paciencia es la clave para descubrir los mayores secretos del universo.',
-    coverImage: '/assets/mateo-paciencia-estelar.jpg',
+    coverImage: '/assets/mateo-paciencia-estelar.webp',
     pdfUrl: '',
     coloringPdfUrl: '',
-    audioUrl: '/audio/suenos-calma.wav',
+    audioUrl: '/audio/paciencia-estelar.mp3',
     audioDuration: '4:30 min',
     moralLesson: 'La paciencia no es sentarse a esperar sin más, sino saber guardar la calma con una sonrisa mientras las cosas maravillosas van madurando.',
     discussionQuestions: [
@@ -230,7 +230,7 @@ export const STORIES: Story[] = [
       title: 'Mateo y el Telescopio Estelar',
       characterName: 'Mateo y Don Julián',
       svgId: 'mateo-telescopio',
-      lineartImage: '/assets/colorear_profesor_telescopio.jpg'
+      lineartImage: '/assets/colorear_profesor_telescopio.webp'
     }
   },
   {
@@ -246,10 +246,10 @@ export const STORIES: Story[] = [
     readingTime: '5 min de lectura',
     bookType: 'cuento',
     summary: 'Lucas, Sofía y Tomás se unen durante el recreo para construir una nave espacial de cartón llamada "Space Explorer". Cuando Tomás se queda cabizbajo sin atreverse a decir qué siente, sus amigos descubrirán que el mapa más importante no viaja a las estrellas, sino al corazón.',
-    coverImage: '/assets/el-mapa-de-los-sentimientos.jpg',
+    coverImage: '/assets/el-mapa-de-los-sentimientos.webp',
     pdfUrl: '',
     coloringPdfUrl: '',
-    audioUrl: '/audio/bosque-amigos.wav',
+    audioUrl: '/audio/mapa-empatia.mp3',
     audioDuration: '4:10 min',
     moralLesson: 'La empatía nos enseña a mirar con los ojos de los demás, escuchar con el corazón y acompañar a quien lo necesita sin juzgar.',
     discussionQuestions: [
@@ -309,7 +309,7 @@ export const STORIES: Story[] = [
       title: 'El Mapa de los Sentimientos y el Cohete',
       characterName: 'Amigos y el Cohete',
       svgId: 'mapa-sentimientos',
-      lineartImage: '/assets/colorear_cohete_patio.jpg'
+      lineartImage: '/assets/colorear_cohete_patio.webp'
     }
   },
   {
@@ -325,10 +325,10 @@ export const STORIES: Story[] = [
     readingTime: '5 min de lectura',
     bookType: 'cuento',
     summary: 'Valerio se sentía el chico más temeroso del pueblo de Brumaluna. Cuando su amiga Elara le propone buscar el legendario Cristal de los Ecos, descubrirá que dentro de su corazón late una valentía inquebrantable guiada por la compasión.',
-    coverImage: '/assets/destello-corazon-valiente.jpg',
+    coverImage: '/assets/destello-corazon-valiente.webp',
     pdfUrl: '',
     coloringPdfUrl: '',
-    audioUrl: '/audio/aventura-valiente.wav',
+    audioUrl: '/audio/corazon-valiente.mp3',
     audioDuration: '4:15 min',
     moralLesson: 'El valor no consiste en no tener miedo, sino en hacer lo correcto y vencer nuestros propios temores para ayudar a otro.',
     discussionQuestions: [
@@ -388,7 +388,7 @@ export const STORIES: Story[] = [
       title: 'El Destello del Corazón Valiente y el Cristal',
       characterName: 'Valerio y Elara',
       svgId: 'ciervo-valiente',
-      lineartImage: '/assets/colorear_corazon_valiente.jpg'
+      lineartImage: '/assets/colorear_corazon_valiente.webp'
     }
   },
   {
@@ -404,10 +404,10 @@ export const STORIES: Story[] = [
     readingTime: '6 min de lectura',
     bookType: 'colorear',
     summary: 'Un entrañable libro ilustrado en blanco y negro para leer y colorear. Recorre la historia y enseñanzas de Jesús de Nazaret: la estrella de Belén, el compartir los panes y peces, y cómo cada pequeño gesto de bondad ilumina el mundo.',
-    coverImage: '/assets/la-luz-de-nazaret.jpg',
+    coverImage: '/assets/la-luz-de-nazaret.webp',
     pdfUrl: '',
     coloringPdfUrl: '',
-    audioUrl: '/audio/suenos-calma.wav',
+    audioUrl: '/audio/luz-nazaret.mp3',
     audioDuration: '5:30 min',
     moralLesson: 'Todos podemos ser luz para los demás a través de nuestras pequeñas y grandes acciones de amor y generosidad.',
     discussionQuestions: [
@@ -517,7 +517,7 @@ export const STORIES: Story[] = [
       title: 'La Luz de Nazaret (Para Colorear)',
       characterName: 'Jesús de Nazaret',
       svgId: 'luz-nazaret',
-      lineartImage: '/assets/colorear_luz_nazaret.jpg'
+      lineartImage: '/assets/colorear_luz_nazaret.webp'
     }
   },
   {
@@ -533,10 +533,10 @@ export const STORIES: Story[] = [
     readingTime: '5 min de lectura',
     bookType: 'cuento',
     summary: 'Leo y Maya están listos para surcar las estrellas en su nave de cartón cuando descubren que Oliver los observa desde lejos con timidez. Con generosidad de corazón, deciden que la mejor aventura espacial no es para dos, sino para todos.',
-    coverImage: '/assets/una-mision-para-todos.jpg',
+    coverImage: '/assets/una-mision-para-todos.webp',
     pdfUrl: '',
     coloringPdfUrl: '',
-    audioUrl: '/audio/bosque-amigos.wav',
+    audioUrl: '/audio/mision-generosidad.mp3',
     audioDuration: '4:15 min',
     moralLesson: 'Ser generoso es tener un corazón ancho donde siempre quepa un amigo más. Cuando compartes tus juegos y tu alegría, la diversión se multiplica hasta el infinito.',
     discussionQuestions: [
@@ -596,7 +596,7 @@ export const STORIES: Story[] = [
       title: 'Una Misión para Todos (Para Colorear)',
       characterName: 'Leo, Maya y Oliver',
       svgId: 'mision-dos',
-      lineartImage: '/assets/colorear_mision_todos.jpg'
+      lineartImage: '/assets/colorear_mision_todos.webp'
     }
   }
 ];

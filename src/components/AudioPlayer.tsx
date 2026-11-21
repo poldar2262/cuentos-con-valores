@@ -21,17 +21,18 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [useSpeechSynthesis, setUseSpeechSynthesis] = useState(false);
+  const [useSpeechSynthesis, setUseSpeechSynthesis] = useState(Boolean(storyFullText));
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechProgress, setSpeechProgress] = useState(0);
-  const [hasSpeechSynthesis, setHasSpeechSynthesis] = useState(false);
+  const [hasSpeechSynthesis, setHasSpeechSynthesis] = useState(Boolean(storyFullText));
   const [audioFailed, setAudioFailed] = useState(false);
 
   useEffect(() => {
     const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
     setHasSpeechSynthesis(supported);
-    // Default to full Spanish voice narration whenever story text & browser TTS exist
-    if (supported && storyFullText) {
+    if (!supported) {
+      setUseSpeechSynthesis(false);
+    } else if (storyFullText) {
       setUseSpeechSynthesis(true);
     }
   }, [storyFullText]);

@@ -8,6 +8,7 @@ interface HeaderProps {
   onOpenManual: () => void;
   onOpenAdmin?: () => void;
   onOpenChatbot?: () => void;
+  onNavigate?: (href: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,8 +18,17 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenManual,
   onOpenAdmin,
   onOpenChatbot,
+  onNavigate,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (onNavigate) {
+      e.preventDefault();
+      onNavigate(href);
+      setMobileMenuOpen(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-amber-200/80 shadow-xs">
@@ -26,7 +36,8 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between h-20 gap-4">
           {/* Logo */}
           <a
-            href="#"
+            href="/"
+            onClick={(e) => handleLinkClick(e, '/')}
             className="flex items-center gap-3 group focus:outline-hidden"
             aria-label="Ir al inicio de Cuentos con Valores"
           >
@@ -56,43 +67,48 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Navigation Links Desktop */}
-          <nav aria-label="Navegación principal" className="hidden lg:flex items-center gap-1.5 font-bold text-sm text-slate-700">
+          <nav aria-label="Navegación principal" className="hidden lg:flex items-center gap-1 font-bold text-xs xl:text-sm text-slate-700">
             <a
-              href="#cuentos"
-              className="px-3 py-2 rounded-xl hover:bg-amber-100/70 hover:text-amber-800 transition-colors"
+              href="/#cuentos"
+              onClick={(e) => handleLinkClick(e, '/#cuentos')}
+              className="px-2.5 py-2 rounded-xl hover:bg-amber-100/70 hover:text-amber-800 transition-colors"
             >
               Cuentos
             </a>
             <a
-              href="#descargas"
-              className="px-3 py-2 rounded-xl hover:bg-sky-100/70 hover:text-sky-800 transition-colors flex items-center gap-1.5"
+              href="/dibujos-para-colorear/"
+              onClick={(e) => handleLinkClick(e, '/dibujos-para-colorear/')}
+              className="px-2.5 py-2 rounded-xl hover:bg-sky-100/70 hover:text-sky-800 transition-colors flex items-center gap-1"
             >
               <Palette className="w-4 h-4 text-sky-500" />
-              <span>Dibujos para Colorear</span>
+              <span>Colorear</span>
             </a>
             <a
-              href="#belen-recortable"
-              className="px-3 py-2 rounded-xl hover:bg-amber-100/80 hover:text-amber-950 transition-colors flex items-center gap-1.5 font-semibold text-amber-900 bg-amber-100/50 border border-amber-200/60"
+              href="/belen-recortable/"
+              onClick={(e) => handleLinkClick(e, '/belen-recortable/')}
+              className="px-2.5 py-2 rounded-xl hover:bg-amber-100/80 hover:text-amber-950 transition-colors flex items-center gap-1 font-semibold text-amber-900 bg-amber-100/50 border border-amber-200/60"
             >
               <span>✂️ Belén Recortable</span>
             </a>
             <a
-              href="#oraciones"
-              className="px-3 py-2 rounded-xl hover:bg-indigo-100/70 hover:text-indigo-900 transition-colors flex items-center gap-1.5"
+              href="/oraciones/"
+              onClick={(e) => handleLinkClick(e, '/oraciones/')}
+              className="px-2.5 py-2 rounded-xl hover:bg-indigo-100/70 hover:text-indigo-900 transition-colors flex items-center gap-1"
             >
               <span>🕊️ Oraciones</span>
             </a>
             <a
-              href="#valores"
-              className="px-3 py-2 rounded-xl hover:bg-amber-100/70 hover:text-amber-800 transition-colors"
+              href="/sobre-el-autor/"
+              onClick={(e) => handleLinkClick(e, '/sobre-el-autor/')}
+              className="px-2.5 py-2 rounded-xl hover:bg-amber-100/70 hover:text-amber-800 transition-colors"
             >
-              Guía de Valores
+              Autor
             </a>
             <button
               id="btn-nav-manual"
               type="button"
               onClick={onOpenManual}
-              className="px-3 py-2 rounded-xl text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors flex items-center gap-1.5 cursor-pointer font-bold"
+              className="px-2.5 py-2 rounded-xl text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors flex items-center gap-1 cursor-pointer font-bold"
               title="Abrir el manual de uso de la web"
             >
               <HelpCircle className="w-4 h-4 text-indigo-600" />
@@ -102,30 +118,30 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={onOpenChatbot}
-                className="px-3.5 py-2 rounded-xl text-amber-950 bg-gradient-to-r from-amber-300 via-amber-200 to-amber-300 hover:from-amber-400 hover:to-amber-400 border border-amber-400/80 transition-all flex items-center gap-1.5 cursor-pointer font-bold shadow-xs active:scale-95"
+                className="px-3 py-2 rounded-xl text-amber-950 bg-gradient-to-r from-amber-300 via-amber-200 to-amber-300 hover:from-amber-400 hover:to-amber-400 border border-amber-400/80 transition-all flex items-center gap-1.5 cursor-pointer font-bold shadow-xs active:scale-95"
                 title="Hablar con Valerio: cuentos personalizados con valores"
               >
                 <Sparkles className="w-4 h-4 text-amber-700 animate-pulse" />
-                <span>Habla con Valerio (IA)</span>
+                <span>Valerio (IA)</span>
               </button>
             )}
             <button
               type="button"
               onClick={onOpenContact}
-              className="ml-1 px-4 py-2 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+              className="ml-1 px-3.5 py-2 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
             >
-              Contacto / Sugerir
+              Contacto
             </button>
             {onOpenAdmin && (
               <button
                 id="btn-nav-admin"
                 type="button"
                 onClick={onOpenAdmin}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-800 hover:bg-amber-100/60 transition-colors cursor-pointer"
-                title="Acceso Administrador"
-                aria-label="Acceso Administrador"
+                className="p-2 rounded-xl text-slate-300 hover:text-slate-700 hover:bg-amber-100/60 transition-colors cursor-pointer"
+                title="Acceso privado"
+                aria-label="Acceso privado"
               >
-                <Lock className="w-4 h-4" />
+                <Lock className="w-3.5 h-3.5" />
               </button>
             )}
           </nav>
@@ -162,39 +178,46 @@ export const Header: React.FC<HeaderProps> = ({
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white border-b border-amber-200 p-4 space-y-2 font-bold text-sm">
           <a
-            href="#cuentos"
-            onClick={() => setMobileMenuOpen(false)}
+            href="/#cuentos"
+            onClick={(e) => handleLinkClick(e, '/#cuentos')}
             className="block px-3 py-2 rounded-xl hover:bg-amber-100 text-slate-700"
           >
             📚 Catálogo de Cuentos
           </a>
           <a
-            href="#descargas"
-            onClick={() => setMobileMenuOpen(false)}
+            href="/dibujos-para-colorear/"
+            onClick={(e) => handleLinkClick(e, '/dibujos-para-colorear/')}
             className="block px-3 py-2 rounded-xl hover:bg-sky-100 text-sky-700"
           >
-            🎨 Dibujos para Colorear (PDF)
+            🎨 Dibujos para Colorear
           </a>
           <a
-            href="#belen-recortable"
-            onClick={() => setMobileMenuOpen(false)}
+            href="/belen-recortable/"
+            onClick={(e) => handleLinkClick(e, '/belen-recortable/')}
             className="block px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold"
           >
             ✂️ Belén Recortable (Navidad)
           </a>
           <a
-            href="#oraciones"
-            onClick={() => setMobileMenuOpen(false)}
+            href="/oraciones/"
+            onClick={(e) => handleLinkClick(e, '/oraciones/')}
             className="block px-3 py-2 rounded-xl hover:bg-indigo-100 text-indigo-800"
           >
             🕊️ Oraciones para Niños
           </a>
           <a
-            href="#valores"
-            onClick={() => setMobileMenuOpen(false)}
+            href="/valores/honestidad/"
+            onClick={(e) => handleLinkClick(e, '/valores/honestidad/')}
             className="block px-3 py-2 rounded-xl hover:bg-amber-100 text-slate-700"
           >
-            ✨ Guía de Valores
+            ✨ Cuentos por Valores
+          </a>
+          <a
+            href="/sobre-el-autor/"
+            onClick={(e) => handleLinkClick(e, '/sobre-el-autor/')}
+            className="block px-3 py-2 rounded-xl hover:bg-amber-100 text-slate-700"
+          >
+            ✍️ Sobre el Autor (Juancar Hidalgo)
           </a>
           <button
             type="button"
@@ -230,19 +253,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             💌 Contacto / Sugerir Cuento
           </button>
-          {onOpenAdmin && (
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenAdmin();
-              }}
-              className="w-full text-left px-3 py-2 pt-3 border-t border-amber-100 text-slate-400 hover:text-slate-700 text-xs font-semibold flex items-center gap-2 cursor-pointer"
-            >
-              <Lock className="w-3.5 h-3.5" />
-              <span>Acceso Administrador (Juancar)</span>
-            </button>
-          )}
         </div>
       )}
     </header>

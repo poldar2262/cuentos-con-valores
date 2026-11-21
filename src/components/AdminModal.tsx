@@ -526,7 +526,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=600',
       pdfUrl: pdfUrl.trim() || undefined,
       coloringPdfUrl: coloringPdfUrl.trim() || undefined,
-      audioUrl: '/audio/bosque-amigos.wav',
+      audioUrl: '/audio/telescopio-honestidad.mp3',
       audioDuration: '3:50 min',
       moralLesson: moralLesson.trim() || `La virtud de ${value} nos orienta a actuar con rectitud y amor.`,
       discussionQuestions: [

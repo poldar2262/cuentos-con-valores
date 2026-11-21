@@ -3,19 +3,33 @@ import { BookOpen, Palette, Clock, Users, Heart } from 'lucide-react';
 import { Story } from '../types';
 import { AudioPlayer } from './AudioPlayer';
 
+import { getValueSlug } from '../data/seoRoutes';
+
 interface StoryCardProps {
   story: Story;
   onOpenReader: (story: Story) => void;
   onOpenColoring: (story: Story) => void;
+  onNavigate?: (href: string) => void;
 }
 
 export const StoryCard: React.FC<StoryCardProps> = ({
   story,
   onOpenReader,
   onOpenColoring,
+  onNavigate,
 }) => {
   // Combine page texts for the text-to-speech fallback
   const fullText = story.pages.map((p) => p.text).join(' ');
+  const storyHref = `/cuentos/${story.id}/`;
+  const valueSlug = story.value === 'Todos' ? 'honestidad' : getValueSlug(story.value);
+  const valueHref = `/valores/${valueSlug}/`;
+
+  const handleLink = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (onNavigate) {
+      e.preventDefault();
+      onNavigate(href);
+    }
+  };
 
   return (
     <article
@@ -25,23 +39,32 @@ export const StoryCard: React.FC<StoryCardProps> = ({
       <div>
         {/* Story Illustration Header */}
         <div className="relative aspect-4/3 w-full overflow-hidden bg-amber-50">
-          <img
-            src={story.coverImage}
-            alt={`Ilustración infantil del cuento ${story.title} sobre ${story.value}`}
-            width={848}
-            height={1264}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            loading="lazy"
-          />
+          <a
+            href={storyHref}
+            onClick={(e) => handleLink(e, storyHref)}
+            className="block w-full h-full"
+            aria-label={`Leer el cuento completo ${story.title}`}
+          >
+            <img
+              src={story.coverImage}
+              alt={`Ilustración infantil del cuento ${story.title} sobre ${story.value}`}
+              width={800}
+              height={600}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+            />
+          </a>
 
           {/* Value Badge Top Left */}
           <div className="absolute top-3.5 left-3.5 flex flex-wrap gap-2">
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-xs border ${story.valueBadgeBg} ${story.valueBadgeColor} ${story.valueBorderColor}`}
+            <a
+              href={valueHref}
+              onClick={(e) => handleLink(e, valueHref)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-xs border ${story.valueBadgeBg} ${story.valueBadgeColor} ${story.valueBorderColor} hover:opacity-90`}
             >
               <Heart className="w-3.5 h-3.5 fill-current opacity-80" />
               Valor: {story.value}
-            </span>
+            </a>
           </div>
 
           {/* Age range badge Top Right */}
@@ -73,7 +96,9 @@ export const StoryCard: React.FC<StoryCardProps> = ({
             id={`story-title-${story.id}`}
             className="font-display text-xl sm:text-2xl font-bold text-slate-800 tracking-tight leading-snug group-hover:text-amber-600 transition-colors"
           >
-            {story.title}
+            <a href={storyHref} onClick={(e) => handleLink(e, storyHref)} className="hover:underline">
+              {story.title}
+            </a>
           </h3>
 
           <p className="mt-2 text-sm text-slate-600 leading-relaxed line-clamp-3">
@@ -101,18 +126,18 @@ export const StoryCard: React.FC<StoryCardProps> = ({
 
       {/* Action Buttons Footer */}
       <div className="p-5 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        {/* Button 1: Leer / Ver Cuento en PDF */}
-        <button
+        {/* Button 1: Crawlably linked full story HTML page */}
+        <a
           id={`btn-read-${story.id}`}
-          type="button"
-          onClick={() => onOpenReader(story)}
-          className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white font-bold text-sm shadow-xs hover:shadow-md transition-all cursor-pointer"
+          href={storyHref}
+          onClick={(e) => handleLink(e, storyHref)}
+          className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white font-bold text-sm shadow-xs hover:shadow-md transition-all"
         >
           <BookOpen className="w-4 h-4" />
-          <span>Leer Cuento (PDF)</span>
-        </button>
+          <span>Leer Cuento Completo</span>
+        </a>
 
-        {/* Button 2: Descargar Dibujos para Colorear (PDF) */}
+        {/* Button 2: Interactive Coloring / Quick Reader */}
         <button
           id={`btn-color-${story.id}`}
           type="button"
@@ -120,7 +145,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({
           className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 active:scale-[0.98] text-white font-bold text-sm shadow-xs hover:shadow-md transition-all cursor-pointer"
         >
           <Palette className="w-4 h-4" />
-          <span>Colorear / PDF</span>
+          <span>Colorear / Lámina</span>
         </button>
       </div>
     </article>

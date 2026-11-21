@@ -34,15 +34,15 @@ export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () 
 
   const handleDownload = () => {
     const link = document.createElement('a');
-    link.href = '/assets/belen_recortable.jpg';
-    link.download = 'belen-recortable-cuentos-con-valores.jpg';
+    link.href = '/assets/belen_recortable.webp';
+    link.download = 'belen-recortable-cuentos-con-valores.webp';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   const handleCopyShare = () => {
-    const url = `${window.location.origin}${window.location.pathname}#belen-recortable`;
+    const url = `${window.location.origin}/belen-recortable/`;
     navigator.clipboard.writeText(url).then(() => {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);
@@ -105,10 +105,10 @@ export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () 
                 title="Haz clic para ver la lámina en grande"
               >
                 <img
-                  src="/assets/belen_recortable.jpg"
+                  src="/assets/belen_recortable.webp"
                   alt="Lámina completa del Belén Recortable para niños con figuras y portal"
-                  width={1376}
-                  height={768}
+                  width={1024}
+                  height={571}
                   className="w-full h-full object-contain filter contrast-105 group-hover:scale-102 transition-transform duration-300"
                   loading="lazy"
                 />
@@ -320,7 +320,7 @@ export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () 
             {/* Modal Image Body */}
             <div className="p-4 overflow-auto flex-1 flex items-center justify-center bg-slate-900/5">
               <img
-                src="/assets/belen_recortable.jpg"
+                src="/assets/belen_recortable.webp"
                 alt="Belén recortable en alta resolución con figuras y portal"
                 className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-md border border-slate-200"
               />
@@ -348,7 +348,7 @@ export const BelenRecortableSection: React.FC<BelenRecortableSectionProps> = () 
       <div className="hidden print-only fixed inset-0 bg-white p-4 z-[9999]">
         <div className="w-full h-full flex flex-col items-center justify-center text-center">
           <img
-            src="/assets/belen_recortable.jpg"
+            src="/assets/belen_recortable.webp"
             alt="Lámina para recortar Belén infantil"
             className="w-full h-full object-contain max-h-[96vh]"
           />
